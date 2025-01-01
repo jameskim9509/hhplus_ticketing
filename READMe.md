@@ -60,24 +60,24 @@
 
 # 시퀀스 다이어그램
 ### 토큰 발급
-<img src = "./get token.png">
+<img src = "./get token.png" width=500px height=400px>
 
 ### 예약가능 콘서트 및 좌석 조회
-<img src = "./get available concerts and seats.png">
+<img src = "./get available concerts and seats.png" width=600px height=700px>
 
 ### 콘서트 예약 및 결제
-<img src = "./reserve and pay.png">
+<img src = "./reserve and pay.png" width=700px height=600px>
 
 ### 포인트 조회 및 충전
-<img src = "./get point and charge point.png">
+<img src = "./get point and charge point.png" width=300px height=400px>
 
 # ERD 설계
-<img src = "./erd.png">
+<img src = "./erd.png" width=700px height=500px>
 
 # API 명세 작성
-<img src = "./getTokenAPI.png">
-<img src = "./getAvailableConcertAPI.png">
-<img src = "./getAvailableSeatsAPI.png">
-<img src = "./paymentAPI.png">
-<img src = "./getBalanceAPI.png">
-<img src = "./chargePointAPI.png">
+<kbd><img src = "./getTokenAPI.png" width=350px height=400px/></kbd>
+<kbd><img src = "./getAvailableConcertAPI.png" width=350px height=550px></kbd>
+<kbd><img src = "./getAvailableSeatsAPI.png" width=350px height=500px></kbd>
+<kbd><img src = "./paymentAPI.png" width=350px height=450px></kbd>
+<kbd><img src = "./getBalanceAPI.png" width=350px height=500px></kbd>
+<kbd><img src = "./chargePointAPI.png" width=350px height=500px></kbd>

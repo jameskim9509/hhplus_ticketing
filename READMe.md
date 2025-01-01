@@ -70,3 +70,14 @@
 
 ### 포인트 조회 및 충전
 <img src = "./get point and charge point.png">
+
+# ERD 설계
+<img src = "./erd.png">
+
+# API 명세 작성
+<img src = "./getTokenAPI.png">
+<img src = "./getAvailableConcertAPI.png">
+<img src = "./getAvailableSeatsAPI.png">
+<img src = "./paymentAPI.png">
+<img src = "./getBalanceAPI.png">
+<img src = "./chargePointAPI.png">

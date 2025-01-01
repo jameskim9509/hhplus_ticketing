@@ -56,7 +56,7 @@
     - 결제를 완료하지 않을 경우 대기열 토큰이 남아있는 것을 고려하여 유효기간(10분)을 두어 낭비를 방지해야한다.
 
 # 사용자 입장의 플로우차트
-<img src = "./flowchart_of_user.png">
+<img src = "./flowchart_of_user.png" width=300px height=800px >
 
 # 시퀀스 다이어그램
 ### 토큰 발급

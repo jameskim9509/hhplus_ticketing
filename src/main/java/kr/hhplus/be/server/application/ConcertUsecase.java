@@ -31,6 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 @Service
@@ -56,7 +57,7 @@ public class ConcertUsecase {
     {
         User user = userReader.readById(userId);
         String uuid = user.getUuid();
-        if (uuid.isEmpty()) {
+        if (Objects.isNull(uuid)) {
             uuid = UUID.randomUUID().toString();
             userModifier.modifyUser(
                     User.builder()
@@ -115,6 +116,7 @@ public class ConcertUsecase {
                     {
                         t.setStatus(WaitingQueueStatus.ACTIVE);
                         t.setExpiredAt(LocalDateTime.now().plusMinutes(10));
+                        waitingQueueModifier.modifyToken(t);
                     });
         }
     }

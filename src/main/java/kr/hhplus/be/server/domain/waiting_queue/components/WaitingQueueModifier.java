@@ -17,8 +17,8 @@ public class WaitingQueueModifier {
         return waitingQueueModifierRepository.modifyToken(token);
     }
 
-    public WaitingQueue deleteAllTokens(List<WaitingQueue> tokenList)
+    public void deleteAllTokens(List<WaitingQueue> tokenList)
     {
-        return waitingQueueModifierRepository.deleteAllTokens(tokenList);
+        waitingQueueModifierRepository.deleteAllTokens(tokenList);
     }
 }

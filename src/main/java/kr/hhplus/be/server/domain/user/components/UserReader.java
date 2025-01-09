@@ -16,6 +16,12 @@ public class UserReader {
                 .orElseThrow(() -> new RuntimeException("존재하지 않는 사용자입니다."));
     }
 
+    public User readByIdWithLock(Long userId)
+    {
+        return userReaderRepository.readByIdWithLock(userId)
+                .orElseThrow(() -> new RuntimeException("존재하지 않는 사용자입니다."));
+    }
+
     public User readByUuid(String uuid)
     {
         return userReaderRepository.readByUuid(uuid)

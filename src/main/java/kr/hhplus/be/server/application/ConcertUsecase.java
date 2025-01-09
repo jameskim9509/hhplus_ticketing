@@ -55,7 +55,7 @@ public class ConcertUsecase {
 
     public CreateTokenResponse createToken(Long userId)
     {
-        User user = userReader.readById(userId);
+        User user = userReader.readByIdWithLock(userId);
         String uuid = user.getUuid();
         if (Objects.isNull(uuid)) {
             uuid = UUID.randomUUID().toString();

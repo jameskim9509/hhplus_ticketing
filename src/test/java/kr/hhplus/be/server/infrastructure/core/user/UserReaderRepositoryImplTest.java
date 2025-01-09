@@ -32,6 +32,19 @@ class UserReaderRepositoryImplTest {
 
     @Transactional
     @Test
+    void readByIdWithLock() {
+        // given
+        User user = userJpaRepository.save(User.builder().build());
+        userJpaRepository.flush();
+
+        // when, then
+        Assertions.assertThat(
+                userReaderRepository.readByIdWithLock(user.getId())
+        ).isNotEmpty();
+    }
+
+    @Transactional
+    @Test
     void readByUuid() {
         // given
         User user = userJpaRepository.save(User.builder().uuid("1234-5678").build());

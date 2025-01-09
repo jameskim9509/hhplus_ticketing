@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -28,5 +29,6 @@ public class Concert {
     private LocalDate date;
 
     @OneToMany(mappedBy = "concert", fetch = FetchType.LAZY)
-    List<Seat> seatList;
+    @Builder.Default
+    List<Seat> seatList = new ArrayList<>();
 }

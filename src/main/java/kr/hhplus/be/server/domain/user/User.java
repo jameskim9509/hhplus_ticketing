@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static kr.hhplus.be.server.domain.user.components.UserModifier.MAX_POINT;
@@ -27,7 +28,8 @@ public class User {
     private String uuid;
 
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
-    private List<WaitingQueue> waitingQueueList;
+    @Builder.Default
+    private List<WaitingQueue> waitingQueueList = new ArrayList<>();
 
     public void chargePoint(Long chargePoint)
     {

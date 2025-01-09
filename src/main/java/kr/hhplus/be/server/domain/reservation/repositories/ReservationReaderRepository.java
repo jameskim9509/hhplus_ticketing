@@ -7,5 +7,6 @@ import java.util.Optional;
 
 public interface ReservationReaderRepository {
     public Optional<Reservation> readByIdWithLock(Long reservationId);
+    public Optional<Reservation> readById(Long reservationId);
     public List<Reservation> readAllPaymentRequiredWithLock();
 }

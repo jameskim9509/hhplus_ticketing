@@ -243,4 +243,23 @@ public class ConcertUsecase {
         userModifier.modifyUser(user);
         return new ChargePointResponse(user.getId(), user.getBalance());
     }
+
+    public GetBalanceResponse getBalance(String uuid)
+    {
+        User user = userReader.readByUuid(uuid);
+        return new GetBalanceResponse(user.getBalance());
+    }
+
+    public ReservationResponse getReservation(Long reservationId, String uuid)
+    {
+        User user = userReader.readByUuid(uuid);
+        Reservation reservation = reservationReader.readById(reservationId);
+
+        if (user.getId() != reservation.getUser().getId())
+            throw new RuntimeException("요청자의 예약 정보가 아닙니다.");
+
+        return new ReservationResponse(
+                reservationId, reservation.getConcertName(), reservation.getSeatNumber(), reservation.getSeatCost(), reservation.getStatus(), reservation.getExpiredAt()
+        );
+    }
 }

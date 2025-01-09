@@ -22,6 +22,20 @@ class ReservationReaderRepositoryImplTest {
 
     @Test
     @Transactional
+    void readById() {
+        // given
+        Reservation reservation = reservationJpaRepository.save(Reservation.builder().build());
+        reservationJpaRepository.flush();
+
+        // when
+        Reservation expectedReservation = reservationReaderRepository.readById(reservation.getId()).get();
+
+        // then
+        Assertions.assertThat(expectedReservation).isNotNull();
+    }
+
+    @Test
+    @Transactional
     void readByIdWithLock() {
         // given
         Reservation reservation = reservationJpaRepository.save(Reservation.builder().build());

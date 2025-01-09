@@ -1,5 +1,6 @@
 package kr.hhplus.be.server.application;
 
+import com.sun.source.tree.ModuleTree;
 import kr.hhplus.be.server.domain.concert.Concert;
 import kr.hhplus.be.server.domain.concert.components.ConcertReader;
 import kr.hhplus.be.server.domain.reservation.Reservation;
@@ -504,5 +505,25 @@ class ConcertUsecaseUnitTest {
                         )
                 ).isInstanceOf(RuntimeException.class)
                 .hasMessage("요청자의 예약 정보가 아닙니다.");
+    }
+
+    @Test
+    void 요청자가_요청하지_않은_예약_조회시_에러()
+    {
+        // given
+        Mockito.doReturn(User.builder().id(1L).build())
+                .when(userReader).readByUuid(Mockito.anyString());
+
+        Mockito.doReturn(
+                Reservation.builder()
+                        .user(User.builder().id(2L).build())
+                        .build()
+        ).when(reservationReader).readById(Mockito.anyLong());
+
+        // when
+        Assertions.assertThatThrownBy(
+                () -> concertUsecase.getReservation(1L, UUID.randomUUID().toString())
+        ).isInstanceOf(RuntimeException.class)
+        .hasMessage("요청자의 예약 정보가 아닙니다.");
     }
 }

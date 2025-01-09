@@ -15,6 +15,11 @@ public class ReservationReaderRepositoryImpl implements ReservationReaderReposit
     private final ReservationJpaRepository reservationJpaRepository;
 
     @Override
+    public Optional<Reservation> readById(Long reservationId) {
+        return reservationJpaRepository.findById(reservationId);
+    }
+
+    @Override
     public Optional<Reservation> readByIdWithLock(Long reservationId) {
         return reservationJpaRepository.findByIdWithLock(reservationId);
     }

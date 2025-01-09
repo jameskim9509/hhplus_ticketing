@@ -230,10 +230,7 @@ public class ConcertUsecase {
                 .filter(r -> r.getExpiredAt().isBefore(LocalDateTime.now()))
                 .forEach(r ->
                 {
-                    Seat seat = seatReader.getById(r.getSeatId());
-                    seat.setStatus(SeatStatus.AVAILABLE);
-                    seatModifier.modifySeat(seat);
-
+                    r.getSeat().setStatus(SeatStatus.AVAILABLE);
                     r.setStatus(ReservationStatus.EXPIRED);
                     reservationModifier.modifyReservation(r);
                 });

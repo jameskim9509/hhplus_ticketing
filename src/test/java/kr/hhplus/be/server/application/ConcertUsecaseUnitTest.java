@@ -289,26 +289,27 @@ class ConcertUsecaseUnitTest {
                         Reservation.builder()
                                 .status(ReservationStatus.PAYMENT_REQUIRED)
                                 .expiredAt(LocalDateTime.now().minusMinutes(1))
+                                .seat(Seat.builder().build())
                                 .build(),
                         Reservation.builder()
                                 .status(ReservationStatus.PAYMENT_REQUIRED)
                                 .expiredAt(LocalDateTime.now().plusMinutes(1))
+                                .seat(Seat.builder().build())
                                 .build(),
                         Reservation.builder()
                                 .status(ReservationStatus.PAYMENT_REQUIRED)
                                 .expiredAt(LocalDateTime.now().minusMinutes(1))
+                                .seat(Seat.builder().build())
                                 .build()
                 )
         ).when(reservationReader).readAllPaymentRequiredWithLock();
-
-        Mockito.doReturn(Seat.builder().build())
-                .when(seatReader).getById(Mockito.any());
 
         // when
         concertUsecase.updateSeat();
 
         // then
-        Mockito.verify(seatReader, Mockito.times(2)).getById(Mockito.any());;
+        Mockito.verify(reservationModifier, Mockito.times(2))
+                .modifyReservation(Mockito.any());;
     }
 
     @Test

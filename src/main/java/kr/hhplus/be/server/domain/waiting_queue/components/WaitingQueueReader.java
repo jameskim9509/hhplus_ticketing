@@ -20,14 +20,16 @@ public class WaitingQueueReader {
     {
         return user.getWaitingQueueList().stream()
                 .filter(t -> t.getStatus() != WaitingQueueStatus.EXPIRED)
-                .findFirst().get();
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("존재하지 않는 토큰입니다."));
     }
 
     public WaitingQueue readValidTokenByUuidWithLock(String uuid)
     {
         return waitingQueueReaderRepository.readTokensByUuidWithLock(uuid).stream()
                 .filter(t -> t.getStatus() != WaitingQueueStatus.EXPIRED)
-                .findFirst().get();
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("존재하지 않는 토큰입니다."));
     }
 
     public List<WaitingQueue> readAllExpiredTokens()
@@ -51,9 +53,8 @@ public class WaitingQueueReader {
         return waitingQueueReaderRepository.readWaitTokensLimitBy(pageable);
     }
 
-    public WaitingQueue readActiveTokenWithMaxId()
-    {
-        return waitingQueueReaderRepository.readActiveTokenLimitBy(PageRequest.of(0, 1)).get();
+    public WaitingQueue readActiveTokenWithMaxId() {
+        return waitingQueueReaderRepository.readActiveTokenLimitBy(PageRequest.of(0, 1)).orElseThrow(() -> new RuntimeException("활성화된 토큰이 없습니다."));
     }
 
     public boolean isValidTokenExists(User user)

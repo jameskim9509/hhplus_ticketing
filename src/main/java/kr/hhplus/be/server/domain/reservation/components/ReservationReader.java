@@ -14,7 +14,8 @@ public class ReservationReader {
 
     public Reservation readByIdWithLock(Long reservationId)
     {
-        return reservationReaderRepository.readByIdWithLock(reservationId).get();
+        return reservationReaderRepository.readByIdWithLock(reservationId)
+                .orElseThrow(() -> new RuntimeException("존재하지 않는 예약입니다."));
     }
 
     public List<Reservation> readAllPaymentRequiredWithLock()

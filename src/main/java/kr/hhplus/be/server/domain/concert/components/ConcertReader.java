@@ -15,12 +15,14 @@ public class ConcertReader {
 
     public Concert getByDate(LocalDate date)
     {
-        return concertReaderRepository.getByDate(date).get();
+        return concertReaderRepository.getByDate(date)
+                .orElseThrow(() -> new RuntimeException("존재하지 않는 콘서트입니다."));
     }
 
     public Concert getById(Long id)
     {
-        return concertReaderRepository.getById(id).get();
+        return concertReaderRepository.getById(id)
+                .orElseThrow(() -> new RuntimeException("존재하지 않는 콘서트입니다."));
     }
 
     public List<Concert> readByDateBetween(LocalDate startDate, LocalDate endDate){

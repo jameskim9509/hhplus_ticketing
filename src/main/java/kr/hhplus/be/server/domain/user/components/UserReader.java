@@ -12,16 +12,19 @@ public class UserReader {
 
     public User readById(Long userId)
     {
-        return userReaderRepository.readById(userId).get();
+        return userReaderRepository.readById(userId)
+                .orElseThrow(() -> new RuntimeException("존재하지 않는 사용자입니다."));
     }
 
     public User readByUuid(String uuid)
     {
-        return userReaderRepository.readByUuid(uuid).get();
+        return userReaderRepository.readByUuid(uuid)
+                .orElseThrow(() -> new RuntimeException("존재하지 않는 사용자입니다."));
     }
 
     public User readByUuidWithLock(String uuid)
     {
-        return userReaderRepository.readByUuidWithLock(uuid).get();
+        return userReaderRepository.readByUuidWithLock(uuid)
+                .orElseThrow(() -> new RuntimeException("존재하지 않는 사용자입니다."));
     }
 }

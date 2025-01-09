@@ -16,17 +16,27 @@ public class SeatReader {
 
     public List<Seat> getAvailableSeats(Concert concert)
     {
-        return concert.getSeatList().stream()
+        List<Seat> seatList = concert.getSeatList().stream()
                 .filter(s -> s.getStatus() == SeatStatus.AVAILABLE).toList();
+        if (seatList.isEmpty())
+            throw new RuntimeException("이용가능한 좌석이 없습니다.");
+
+        return seatList;
     }
 
     public Seat readAvailableSeatByConcertIdAndNumberWithLock(Long concertId, Long seatNumber)
     {
-        return seatReaderRepository.getSeatByConcertIdAndNumberWithLock(concertId, seatNumber).get();
+        Seat seat =  seatReaderRepository.getSeatByConcertIdAndNumberWithLock(concertId, seatNumber)
+            .orElseThrow(() -> new RuntimeException("없는 좌석입니다."));
+        if (seat.getStatus() != SeatStatus.AVAILABLE)
+            throw new RuntimeException("사용 가능한 좌석이 아닙니다.");
+
+        return seat;
     }
 
     public Seat getById(Long seatId)
     {
-        return seatReaderRepository.getById(seatId).get();
+        return seatReaderRepository.getById(seatId)
+                .orElseThrow(() -> new RuntimeException("존재하지 않는 좌석입니다."));
     }
 }

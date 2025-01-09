@@ -15,14 +15,15 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class WaitingQueue {
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "waiting_queue_id")
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "uuid")
     private User user;
-    private String uuid;
+//    @Column(insertable = false, updatable = false)
+//    private String uuid;
 
     @Setter
     @Enumerated(EnumType.STRING)

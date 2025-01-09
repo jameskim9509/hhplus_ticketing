@@ -27,7 +27,7 @@ public class SeatReader {
     public Seat readAvailableSeatByConcertIdAndNumberWithLock(Long concertId, Long seatNumber)
     {
         Seat seat =  seatReaderRepository.getSeatByConcertIdAndNumberWithLock(concertId, seatNumber)
-            .orElseThrow(() -> new RuntimeException("없는 좌석입니다."));
+                .orElseThrow(() -> new RuntimeException("없는 좌석 입니다."));
         if (seat.getStatus() != SeatStatus.AVAILABLE)
             throw new RuntimeException("사용 가능한 좌석이 아닙니다.");
 

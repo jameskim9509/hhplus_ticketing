@@ -19,7 +19,7 @@ import static kr.hhplus.be.server.domain.user.components.UserModifier.MAX_POINT;
 @AllArgsConstructor
 public class User {
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id")
     private Long id;
 

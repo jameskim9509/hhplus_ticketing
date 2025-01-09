@@ -12,14 +12,15 @@ import lombok.*;
 @NoArgsConstructor
 public class Seat {
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "seat_id")
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "concert_id")
     private Concert concert;
-    private Long concertId;
+//    @Column(name = "concert_id", insertable = false, updatable = false)
+//    private Long concertId;
 
     private Long number;
 

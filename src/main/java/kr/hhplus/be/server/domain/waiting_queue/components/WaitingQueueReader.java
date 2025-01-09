@@ -53,7 +53,8 @@ public class WaitingQueueReader {
         return waitingQueueReaderRepository.readWaitTokensLimitBy(pageable);
     }
 
-    public WaitingQueue readActiveTokenWithMaxId() {
+    public WaitingQueue readActiveTokenWithMaxId()
+    {
         return waitingQueueReaderRepository.readActiveTokenLimitBy(PageRequest.of(0, 1)).orElseThrow(() -> new RuntimeException("활성화된 토큰이 없습니다."));
     }
 

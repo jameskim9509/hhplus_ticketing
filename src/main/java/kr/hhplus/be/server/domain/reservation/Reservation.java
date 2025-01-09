@@ -17,26 +17,29 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class Reservation {
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "reservation_id")
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
-    private Long userId;
+//    @Column(name = "user_id", insertable = false, updatable = false)
+//    private Long userId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "concert_id")
     private Concert concert;
-    private Long concertId;
+//    @Column(name = "concert_id", insertable = false, updatable = false)
+//    private Long concertId;
     private String concertName;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "seat_id")
     private Seat seat;
-    // seat_id 컬럼을 직접 관리
-    private Long seatId;
+    // seat_id 컬럼을 조회용으로 중복 설정
+//    @Column(name = "seat_id", insertable = false, updatable = false)
+//    private Long seatId;
     private Long seatNumber;
     private Long seatCost;
 
@@ -49,14 +52,14 @@ public class Reservation {
     public void setConcert(Concert concert)
     {
         this.concert = concert;
-        this.concertId = concert.getId();
+//        this.concertId = concert.getId();
         this.concertName = concert.getName();
     }
 
     public void setSeat(Seat seat)
     {
         this.seat = seat;
-        this.seatId = seat.getId();
+//        this.seatId = seat.getId();
         this.seatCost = seat.getCost();
         this.seatNumber = seat.getNumber();
     }

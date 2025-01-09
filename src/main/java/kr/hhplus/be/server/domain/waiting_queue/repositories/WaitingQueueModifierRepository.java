@@ -6,5 +6,5 @@ import java.util.List;
 
 public interface WaitingQueueModifierRepository {
     public WaitingQueue modifyToken(WaitingQueue waitingQueue);
-    public void deleteAllTokens(List<WaitingQueue> tokenList);
+    public void deleteAllTokens(List<WaitingQueue> token);
 }

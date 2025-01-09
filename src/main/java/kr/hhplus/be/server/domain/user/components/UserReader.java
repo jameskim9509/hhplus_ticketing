@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class UserReader {
-    UserReaderRepository userReaderRepository;
+    private final UserReaderRepository userReaderRepository;
 
     public User readById(Long userId)
     {

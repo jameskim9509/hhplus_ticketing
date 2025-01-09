@@ -76,8 +76,8 @@ public class ConcertUsecase {
         List<WaitingQueue> tokenList = waitingQueueReader.readAllActiveTokens();
 
         WaitingQueue token = WaitingQueue.builder()
-                .user(user)
                 .build();
+        token.setUser(user);
         if (tokenList.size() < MAX_ACTIVE_USER) {
             token.setStatus(WaitingQueueStatus.ACTIVE);
             token.setExpiredAt(LocalDateTime.now().plusMinutes(10));

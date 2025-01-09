@@ -36,4 +36,10 @@ public class WaitingQueue {
         this.expiredAt = now;
         this.status = WaitingQueueStatus.EXPIRED;
     }
+
+    public void setUser(User user)
+    {
+        this.user = user;
+        user.getWaitingQueueList().add(this);
+    }
 }

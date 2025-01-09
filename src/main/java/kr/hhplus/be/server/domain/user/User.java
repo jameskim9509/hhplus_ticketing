@@ -31,13 +31,15 @@ public class User {
 
     public void chargePoint(Long chargePoint)
     {
-        if (MAX_POINT < this.balance + chargePoint) {}
+        if (MAX_POINT < this.balance + chargePoint)
+            throw new RuntimeException("충전 가능 금액을 초과하였습니다.");
         this.balance += chargePoint;
     }
 
     public void usePoint(Long usePoint)
     {
-        if (this.balance < usePoint) {}
+        if (this.balance < usePoint)
+            throw new RuntimeException("잔액이 부족합니다.");
         this.balance -= usePoint;
     }
 }

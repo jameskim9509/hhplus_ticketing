@@ -68,6 +68,11 @@ public class ConcertUsecase {
             );
         }
 
+        if (waitingQueueReader.isValidTokenExists(user))
+        {
+            throw new RuntimeException("토큰이 이미 존재합니다.");
+        }
+
         List<WaitingQueue> tokenList = waitingQueueReader.readAllActiveTokens();
 
         WaitingQueue token = WaitingQueue.builder()
@@ -130,6 +135,8 @@ public class ConcertUsecase {
     public GetAvailableConcertsResponse getAvailableConcerts(LocalDate startDate, LocalDate endDate, String uuid)
     {
         User user = userReader.readByUuid(uuid);
+        if (waitingQueueReader.readValidToken(user).getStatus() != WaitingQueueStatus.ACTIVE)
+            throw new RuntimeException("활성화되지 않은 토큰입니다.");
 
         List<Concert> concertList = concertReader.readByDateBetween(startDate, endDate);
         return new GetAvailableConcertsResponse(concertList);
@@ -138,6 +145,8 @@ public class ConcertUsecase {
     public GetAvailableSeatsResponse getAvailableSeatsByDate(LocalDate date, String uuid)
     {
         User user = userReader.readByUuid(uuid);
+        if (waitingQueueReader.readValidToken(user).getStatus() != WaitingQueueStatus.ACTIVE)
+            throw new RuntimeException("활성화되지 않은 토큰입니다.");
 
         Concert concert = concertReader.getByDate(date);
         return new GetAvailableSeatsResponse(
@@ -149,6 +158,8 @@ public class ConcertUsecase {
     {
         User user = userReader.readByUuid(uuid);
         WaitingQueue token = waitingQueueReader.readValidTokenByUuidWithLock(uuid);
+        if (token.getStatus() != WaitingQueueStatus.ACTIVE)
+            throw new RuntimeException("활성화되지 않은 토큰입니다.");
 
         Concert concert = concertReader.getByDate(date);
         // lock을 걸어 가져와야 하기 때문에 concert.getSeatList() (x)
@@ -178,8 +189,16 @@ public class ConcertUsecase {
     {
         User user = userReader.readByUuidWithLock(uuid);
         WaitingQueue token = waitingQueueReader.readValidTokenByUuidWithLock(uuid);
+        if (token.getStatus() != WaitingQueueStatus.ACTIVE)
+            throw new RuntimeException("활성화되지 않은 토큰입니다.");
 
         Reservation reservation = reservationReader.readByIdWithLock(reservationId);
+        if (reservation.getExpiredAt().isBefore(LocalDateTime.now()))
+            throw new RuntimeException("만료된 예약입니다.");
+        if (reservation.getStatus() != ReservationStatus.PAYMENT_REQUIRED)
+            throw new RuntimeException("결제가 필요한 예약이 아닙니다.");
+        if (user.getId() != reservation.getUser().getId())
+            throw new RuntimeException("요청자의 예약 정보가 아닙니다.");
 
         Long seatCost = reservation.getSeatCost();
         user.usePoint(seatCost);

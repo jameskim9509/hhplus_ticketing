@@ -195,10 +195,23 @@ class ConcertUsecaseUnitTest {
     @Test
     void reserveSeat() {
         // given
-        Mockito.doReturn(User.builder().build()).when(userReader).readByUuid(Mockito.anyString());
-        Mockito.doReturn(WaitingQueue.builder().build()).when(waitingQueueReader).readValidTokenByUuidWithLock(Mockito.anyString());
-        Mockito.doReturn(Concert.builder().id(1L).build()).when(concertReader).getByDate(Mockito.any());
-        Mockito.doReturn(Seat.builder().status(SeatStatus.AVAILABLE).build()).when(seatReader).readAvailableSeatByConcertIdAndNumberWithLock(Mockito.anyLong(), Mockito.anyLong());
+        Mockito.doReturn(User.builder().build())
+                .when(userReader).readByUuid(Mockito.anyString());
+
+        Mockito.doReturn(
+                WaitingQueue.builder()
+                        .status(WaitingQueueStatus.ACTIVE)
+                        .build()
+        ).when(waitingQueueReader).readValidTokenByUuidWithLock(Mockito.anyString());
+
+        Mockito.doReturn(Concert.builder().id(1L).build())
+                .when(concertReader).getByDate(Mockito.any());
+
+        Mockito.doReturn(
+                Seat.builder()
+                        .status(SeatStatus.AVAILABLE)
+                        .build()
+        ).when(seatReader).readAvailableSeatByConcertIdAndNumberWithLock(Mockito.anyLong(), Mockito.anyLong());
 
         ArgumentCaptor<Reservation> reservationCaptor = ArgumentCaptor.forClass(Reservation.class);
         ArgumentCaptor<Seat> seatCaptor = ArgumentCaptor.forClass(Seat.class);
@@ -225,9 +238,27 @@ class ConcertUsecaseUnitTest {
     @Test
     void pay() {
         // given
-        Mockito.doReturn(User.builder().balance(10000L).build()).when(userReader).readByUuidWithLock(Mockito.anyString());
-        Mockito.doReturn(WaitingQueue.builder().build()).when(waitingQueueReader).readValidTokenByUuidWithLock(Mockito.anyString());
-        Mockito.doReturn(Reservation.builder().seatCost(6000L).build()).when(reservationReader).readByIdWithLock(Mockito.anyLong());
+        Mockito.doReturn(
+                User.builder()
+                        .id(1L)
+                        .balance(10000L)
+                        .build()
+        ).when(userReader).readByUuidWithLock(Mockito.anyString());
+
+        Mockito.doReturn(
+                WaitingQueue.builder()
+                        .status(WaitingQueueStatus.ACTIVE)
+                        .build()
+        ).when(waitingQueueReader).readValidTokenByUuidWithLock(Mockito.anyString());
+
+        Mockito.doReturn(
+                Reservation.builder()
+                        .seatCost(6000L)
+                        .expiredAt(LocalDateTime.now().plusMinutes(1))
+                        .status(ReservationStatus.PAYMENT_REQUIRED)
+                        .user(User.builder().id(1L).build())
+                        .build()
+        ).when(reservationReader).readByIdWithLock(Mockito.anyLong());
 
         ArgumentCaptor<WaitingQueue> tokenCaptor = ArgumentCaptor.forClass(WaitingQueue.class);
         ArgumentCaptor<Reservation> reservationCaptor = ArgumentCaptor.forClass(Reservation.class);
@@ -269,7 +300,9 @@ class ConcertUsecaseUnitTest {
                                 .build()
                 )
         ).when(reservationReader).readAllPaymentRequiredWithLock();
-        Mockito.doReturn(Seat.builder().build()).when(seatReader).getById(Mockito.any());
+
+        Mockito.doReturn(Seat.builder().build())
+                .when(seatReader).getById(Mockito.any());
 
         // when
         concertUsecase.updateSeat();
@@ -281,7 +314,11 @@ class ConcertUsecaseUnitTest {
     @Test
     void chargePoint() {
         // given
-        Mockito.doReturn(User.builder().balance(0L).build()).when(userReader).readByUuidWithLock(Mockito.anyString());
+        Mockito.doReturn(
+                User.builder()
+                        .balance(0L)
+                        .build()
+        ).when(userReader).readByUuidWithLock(Mockito.anyString());
 
         ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
 
@@ -293,5 +330,178 @@ class ConcertUsecaseUnitTest {
 
         //then
         Assertions.assertThat(capturedUser.getBalance()).isEqualTo(10000L);
+    }
+
+    @Test
+    void 이미_토큰이_존재하는데_재발급_받을_경우_에러()
+    {
+        // given
+        Mockito.doReturn(User.builder().build())
+                        .when(userReader).readById(Mockito.anyLong());
+        Mockito.doReturn(true)
+                .when(waitingQueueReader)
+                .isValidTokenExists(Mockito.any());
+
+        // when
+        Assertions.assertThatThrownBy(
+                () -> concertUsecase.createToken(1L)
+        ).isInstanceOf(RuntimeException.class)
+        .hasMessage("토큰이 이미 존재합니다.");
+    }
+
+    @Test
+    void 활성화되지_않은_토큰으로_콘서트_조회시_에러()
+    {
+        // given
+        Mockito.doReturn(
+                WaitingQueue.builder().status(WaitingQueueStatus.WAIT).build()
+        ).when(waitingQueueReader).readValidToken(Mockito.any());
+
+        // when, then
+        Assertions.assertThatThrownBy(
+                () -> concertUsecase.getAvailableConcerts(
+                        LocalDate.now(),
+                        LocalDate.now().plusDays(1),
+                        UUID.randomUUID().toString()
+                )
+        ).isInstanceOf(RuntimeException.class)
+        .hasMessage("활성화되지 않은 토큰입니다.");
+    }
+
+    @Test
+    void 활성화되지_않은_토큰으로_좌석_조회시_에러()
+    {
+        // given
+        Mockito.doReturn(
+                WaitingQueue.builder().status(WaitingQueueStatus.WAIT).build()
+        ).when(waitingQueueReader).readValidToken(Mockito.any());
+
+        // when, then
+        Assertions.assertThatThrownBy(
+                        () -> concertUsecase.getAvailableSeatsByDate(
+                                LocalDate.now(),
+                                UUID.randomUUID().toString()
+                        )
+                ).isInstanceOf(RuntimeException.class)
+                .hasMessage("활성화되지 않은 토큰입니다.");
+    }
+
+    @Test
+    void 활성화되지_않은_토큰으로_예약시_에러()
+    {
+        // given
+        Mockito.doReturn(
+                WaitingQueue.builder().status(WaitingQueueStatus.WAIT).build()
+        ).when(waitingQueueReader).readValidTokenByUuidWithLock(Mockito.any());
+
+        // when, then
+        Assertions.assertThatThrownBy(
+                        () -> concertUsecase.reserveSeat(
+                                LocalDate.now(),
+                                30L,
+                                UUID.randomUUID().toString()
+                        )
+                ).isInstanceOf(RuntimeException.class)
+                .hasMessage("활성화되지 않은 토큰입니다.");
+    }
+
+    @Test
+    void 활성화되지_않은_토큰으로_결제시_에러()
+    {
+        // given
+        Mockito.doReturn(
+                WaitingQueue.builder().status(WaitingQueueStatus.WAIT).build()
+        ).when(waitingQueueReader).readValidTokenByUuidWithLock(Mockito.any());
+
+        // when, then
+        Assertions.assertThatThrownBy(
+                        () -> concertUsecase.pay(
+                                5L,
+                                UUID.randomUUID().toString()
+                        )
+                ).isInstanceOf(RuntimeException.class)
+                .hasMessage("활성화되지 않은 토큰입니다.");
+    }
+
+    @Test
+    void 만료된_예약_결제시_에러()
+    {
+        // given
+        Mockito.doReturn(
+                WaitingQueue.builder()
+                .status(WaitingQueueStatus.ACTIVE)
+                .build()
+        ).when(waitingQueueReader).readValidTokenByUuidWithLock(Mockito.anyString());
+        Mockito.doReturn(
+                Reservation.builder()
+                        .expiredAt(LocalDateTime.now().minusMinutes(1))
+                        .build()
+        ).when(reservationReader).readByIdWithLock(Mockito.anyLong());
+
+        // when, then
+        Assertions.assertThatThrownBy(
+                    () -> concertUsecase.pay(
+                            5L,
+                            UUID.randomUUID().toString()
+                    )
+        ).isInstanceOf(RuntimeException.class)
+        .hasMessage("만료된 예약입니다.");
+    }
+
+    @Test
+    void 결제가_필요없는_예약_결제시_에러()
+    {
+        // given
+        Mockito.doReturn(
+                WaitingQueue.builder()
+                        .status(WaitingQueueStatus.ACTIVE)
+                        .build()
+        ).when(waitingQueueReader).readValidTokenByUuidWithLock(Mockito.anyString());
+        Mockito.doReturn(
+                Reservation.builder()
+                        .expiredAt(LocalDateTime.now().plusMinutes(5))
+                        .status(ReservationStatus.RESERVED)
+                        .build()
+        ).when(reservationReader).readByIdWithLock(Mockito.anyLong());
+
+        // when, then
+        Assertions.assertThatThrownBy(
+                        () -> concertUsecase.pay(
+                                5L,
+                                UUID.randomUUID().toString()
+                        )
+                ).isInstanceOf(RuntimeException.class)
+                .hasMessage("결제가 필요한 예약이 아닙니다.");
+    }
+
+    @Test
+    void 요청자가_예약하지_않은_예약_결제시_에러()
+    {
+        // given
+        Mockito.doReturn(User.builder().id(1L).build())
+                        .when(userReader).readByUuidWithLock(Mockito.anyString());
+
+        Mockito.doReturn(
+                WaitingQueue.builder()
+                        .status(WaitingQueueStatus.ACTIVE)
+                        .build()
+        ).when(waitingQueueReader).readValidTokenByUuidWithLock(Mockito.anyString());
+
+        Mockito.doReturn(
+                Reservation.builder()
+                        .expiredAt(LocalDateTime.now().plusMinutes(5))
+                        .status(ReservationStatus.PAYMENT_REQUIRED)
+                        .user(User.builder().id(2L).build())
+                        .build()
+        ).when(reservationReader).readByIdWithLock(Mockito.anyLong());
+
+        // when, then
+        Assertions.assertThatThrownBy(
+                        () -> concertUsecase.pay(
+                                5L,
+                                UUID.randomUUID().toString()
+                        )
+                ).isInstanceOf(RuntimeException.class)
+                .hasMessage("요청자의 예약 정보가 아닙니다.");
     }
 }

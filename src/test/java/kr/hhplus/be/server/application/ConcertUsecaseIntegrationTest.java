@@ -21,6 +21,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -139,7 +140,7 @@ class ConcertUsecaseIntegrationTest {
         ReserveSeatResponse reserveSeatResponse =
                 concertUsecase.reserveSeat(
                         LocalDate.of(2025,7,1),
-                        30L,
+                        25L,
                         "1234-5678"
                 );
 
@@ -180,7 +181,6 @@ class ConcertUsecaseIntegrationTest {
         Assertions.assertThat(response.balance()).isEqualTo(50_000L);
     }
 
-    @Transactional
     @Test
     void 동시에_3번_결제하면_2번_오류()
     {
@@ -188,7 +188,7 @@ class ConcertUsecaseIntegrationTest {
         User user = userJpaRepository.save(
                 User.builder()
                         .balance(100_000L)
-                        .uuid("1234-5678")
+                        .uuid(UUID.randomUUID().toString())
                         .build()
         );
         userJpaRepository.flush();
@@ -219,7 +219,7 @@ class ConcertUsecaseIntegrationTest {
                         try {
                             concertUsecase.pay(
                                     reservation.getId(),
-                                    "1234-5678"
+                                    user.getUuid()
                             );
                             return true;
                         } catch (RuntimeException re) {
@@ -248,14 +248,13 @@ class ConcertUsecaseIntegrationTest {
                 }).join();
     }
 
-    @Transactional
     @Test
     void 동시에_3번_예약하면_2번_오류()
     {
         // given
         User user = userJpaRepository.save(
                 User.builder()
-                        .uuid("1234-5678")
+                        .uuid(UUID.randomUUID().toString())
                         .build()
         );
         userJpaRepository.flush();
@@ -276,7 +275,7 @@ class ConcertUsecaseIntegrationTest {
                             concertUsecase.reserveSeat(
                                     LocalDate.of(2025,7,1),
                                     30L,
-                                    "1234-5678"
+                                    user.getUuid()
                             );
                             return true;
                         } catch (RuntimeException re) {
@@ -356,7 +355,7 @@ class ConcertUsecaseIntegrationTest {
         User user = userJpaRepository.save(
                 User.builder()
                         .balance(0L)
-                        .uuid("1234-5678")
+                        .uuid(UUID.randomUUID().toString())
                         .build()
         );
         userJpaRepository.flush();
@@ -372,7 +371,7 @@ class ConcertUsecaseIntegrationTest {
                 try{
                     concertUsecase.chargePoint(
                             10000L,
-                            "1234-5678"
+                            user.getUuid()
                     );
                 }
                 finally {

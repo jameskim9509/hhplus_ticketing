@@ -1,7 +1,7 @@
 package kr.hhplus.be.server.infrastructure.core.waiting_queue;
 
-import kr.hhplus.be.server.domain.waiting_queue.WaitingQueue;
-import kr.hhplus.be.server.domain.waiting_queue.repositories.WaitingQueueModifierRepository;
+import kr.hhplus.be.server.domain.token.WaitingQueue;
+import kr.hhplus.be.server.domain.token.repositories.WaitingQueueModifierRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 

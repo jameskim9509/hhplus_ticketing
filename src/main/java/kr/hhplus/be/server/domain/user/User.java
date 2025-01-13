@@ -1,7 +1,7 @@
 package kr.hhplus.be.server.domain.user;
 
 import jakarta.persistence.*;
-import kr.hhplus.be.server.domain.waiting_queue.WaitingQueue;
+import kr.hhplus.be.server.domain.token.WaitingQueue;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;

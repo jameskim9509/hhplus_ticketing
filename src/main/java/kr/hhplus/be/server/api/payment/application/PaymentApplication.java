@@ -1,0 +1,72 @@
+package kr.hhplus.be.server.api.payment.application;
+
+import kr.hhplus.be.server.domain.payment.Payment;
+import kr.hhplus.be.server.domain.payment.components.PaymentWriter;
+import kr.hhplus.be.server.domain.reservation.Reservation;
+import kr.hhplus.be.server.domain.reservation.components.ReservationModifier;
+import kr.hhplus.be.server.domain.reservation.components.ReservationReader;
+import kr.hhplus.be.server.domain.reservation.type.ReservationStatus;
+import kr.hhplus.be.server.domain.token.WaitingQueue;
+import kr.hhplus.be.server.domain.token.components.WaitingQueueModifier;
+import kr.hhplus.be.server.domain.token.components.WaitingQueueReader;
+import kr.hhplus.be.server.domain.token.type.WaitingQueueStatus;
+import kr.hhplus.be.server.domain.user.User;
+import kr.hhplus.be.server.domain.user.components.UserModifier;
+import kr.hhplus.be.server.domain.user.components.UserReader;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+
+@Service
+@RequiredArgsConstructor
+public class PaymentApplication implements PaymentUsecase{
+    private final UserReader userReader;
+    private final WaitingQueueReader waitingQueueReader;
+    private final WaitingQueueModifier waitingQueueModifier;
+    private final UserModifier userModifier;
+    private final ReservationModifier reservationModifier;
+    private final ReservationReader reservationReader;
+    private final PaymentWriter paymentWriter;
+
+    @Override
+    @Transactional
+    public Payment pay(Long reservationId, String uuid)
+    {
+        User user = userReader.readByUuidWithLock(uuid);
+        WaitingQueue token = waitingQueueReader.readValidTokenByUuidWithLock(uuid);
+        if (token.getStatus() != WaitingQueueStatus.ACTIVE)
+            throw new RuntimeException("활성화되지 않은 토큰입니다.");
+
+        Reservation reservation = reservationReader.readByIdWithLock(reservationId);
+        if (reservation.getExpiredAt().isBefore(LocalDateTime.now()))
+            throw new RuntimeException("만료된 예약입니다.");
+        if (reservation.getStatus() != ReservationStatus.PAYMENT_REQUIRED)
+            throw new RuntimeException("결제가 필요한 예약이 아닙니다.");
+        if (user.getId() != reservation.getUser().getId())
+            throw new RuntimeException("요청자의 예약 정보가 아닙니다.");
+
+        Long seatCost = reservation.getSeatCost();
+        user.usePoint(seatCost);
+
+        LocalDateTime now = LocalDateTime.now();
+        token.expire(now);
+        reservation.confirm(now);
+
+        waitingQueueModifier.modifyToken(token);
+        userModifier.modifyUser(user);
+        reservationModifier.modifyReservation(reservation);
+
+        Payment payment = Payment.builder()
+                .createdAt(now)
+                .point(seatCost)
+                .user(user)
+                .reservation(reservation)
+                .build();
+
+        paymentWriter.createPayment(payment);
+
+        return payment;
+    }
+}

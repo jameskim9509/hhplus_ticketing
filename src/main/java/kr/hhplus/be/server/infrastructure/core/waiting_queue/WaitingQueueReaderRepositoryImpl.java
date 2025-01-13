@@ -1,8 +1,8 @@
 package kr.hhplus.be.server.infrastructure.core.waiting_queue;
 
-import kr.hhplus.be.server.domain.waiting_queue.WaitingQueue;
-import kr.hhplus.be.server.domain.waiting_queue.repositories.WaitingQueueReaderRepository;
-import kr.hhplus.be.server.domain.waiting_queue.type.WaitingQueueStatus;
+import kr.hhplus.be.server.domain.token.WaitingQueue;
+import kr.hhplus.be.server.domain.token.repositories.WaitingQueueReaderRepository;
+import kr.hhplus.be.server.domain.token.type.WaitingQueueStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;

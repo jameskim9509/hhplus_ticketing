@@ -1,4 +1,4 @@
-package kr.hhplus.be.server.config.swagger;
+package kr.hhplus.be.server.common.config.swagger;
 
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;

@@ -1,6 +1,6 @@
-package kr.hhplus.be.server.infrastructure.core.reservation;
+package kr.hhplus.be.server.infrastructure.core.payment;
 
-import kr.hhplus.be.server.domain.reservation.Payment;
+import kr.hhplus.be.server.domain.payment.Payment;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,9 +10,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 @ActiveProfiles("test")
 @SpringBootTest
-class PaymentManagerRepositoryImplTest {
+class PaymentWriterRepositoryImplTest {
     @Autowired
-    private PaymentManagerRepositoryImpl paymentManagerRepository;
+    private PaymentWriterRepositoryImpl paymentWriterRepository;
     @Autowired
     private PaymentJpaRepository paymentJpaRepository;
 
@@ -20,7 +20,7 @@ class PaymentManagerRepositoryImplTest {
     @Test
     void createPayment() {
         // given, when
-        Payment payment = paymentManagerRepository.createPayment(
+        Payment payment = paymentWriterRepository.createPayment(
                 Payment.builder().build()
         );
 

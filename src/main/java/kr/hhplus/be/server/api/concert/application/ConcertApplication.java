@@ -1,5 +1,7 @@
 package kr.hhplus.be.server.api.concert.application;
 
+import kr.hhplus.be.server.common.exception.ConcertException;
+import kr.hhplus.be.server.common.exception.ErrorCode;
 import kr.hhplus.be.server.domain.concert.Concert;
 import kr.hhplus.be.server.domain.concert.components.ConcertReader;
 import kr.hhplus.be.server.domain.token.components.WaitingQueueReader;
@@ -27,7 +29,7 @@ public class ConcertApplication implements ConcertUsecase{
     {
         User user = userReader.readByUuid(uuid);
         if (waitingQueueReader.readValidToken(user).getStatus() != WaitingQueueStatus.ACTIVE)
-            throw new RuntimeException("활성화되지 않은 토큰입니다.");
+            throw new ConcertException(ErrorCode.TOKEN_IS_INVALID);
 
         return concertReader.readByDateBetween(startDate, endDate);
     }

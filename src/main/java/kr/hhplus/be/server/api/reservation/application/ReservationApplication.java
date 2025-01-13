@@ -1,5 +1,7 @@
 package kr.hhplus.be.server.api.reservation.application;
 
+import kr.hhplus.be.server.common.exception.ConcertException;
+import kr.hhplus.be.server.common.exception.ErrorCode;
 import kr.hhplus.be.server.domain.concert.Concert;
 import kr.hhplus.be.server.domain.concert.components.ConcertReader;
 import kr.hhplus.be.server.domain.reservation.Reservation;
@@ -42,8 +44,8 @@ public class ReservationApplication implements ReservationUsecase{
         User user = userReader.readByUuid(uuid);
         Reservation reservation = reservationReader.readById(reservationId);
 
-        if (user.getId() != reservation.getUser().getId())
-            throw new RuntimeException("요청자의 예약 정보가 아닙니다.");
+        if (user.getId().longValue() != reservation.getUser().getId().longValue())
+            throw new ConcertException(ErrorCode.RESERVATION_NOT_MATCHED);
 
         return reservation;
     }
@@ -55,7 +57,7 @@ public class ReservationApplication implements ReservationUsecase{
         User user = userReader.readByUuid(uuid);
         WaitingQueue token = waitingQueueReader.readValidTokenByUuidWithLock(uuid);
         if (token.getStatus() != WaitingQueueStatus.ACTIVE)
-            throw new RuntimeException("활성화되지 않은 토큰입니다.");
+            throw new ConcertException(ErrorCode.TOKEN_IS_INVALID);
 
         Concert concert = concertReader.getByDate(date);
         // lock을 걸어 가져와야 하기 때문에 concert.getSeatList() (x)

@@ -1,5 +1,8 @@
 package kr.hhplus.be.server.api.token.dto;
 
+import kr.hhplus.be.server.common.exception.ConcertException;
+import kr.hhplus.be.server.common.exception.ErrorCode;
+
 public record CreateTokenRequest(Long userId) {
     public CreateTokenRequest(Long userId)
     {
@@ -9,7 +12,9 @@ public record CreateTokenRequest(Long userId) {
 
     private void validate(Long userId)
     {
-        if (userId == null) throw new RuntimeException("");
-        if (userId < 0) throw new RuntimeException("");
+        if (userId == null)
+            throw new ConcertException(ErrorCode.PARAMETER_NOT_VALID);
+        if (userId < 1)
+            throw new ConcertException(ErrorCode.PARAMETER_NOT_VALID);
     }
 }

@@ -1,5 +1,7 @@
 package kr.hhplus.be.server.api.token.application;
 
+import kr.hhplus.be.server.common.exception.ConcertException;
+import kr.hhplus.be.server.common.exception.ErrorCode;
 import kr.hhplus.be.server.domain.token.WaitingQueue;
 import kr.hhplus.be.server.domain.token.components.WaitingQueueModifier;
 import kr.hhplus.be.server.domain.token.components.WaitingQueueReader;
@@ -49,7 +51,7 @@ public class TokenApplication implements TokenUsecase{
 
         if (waitingQueueReader.isValidTokenExists(user))
         {
-            throw new RuntimeException("토큰이 이미 존재합니다.");
+            throw new ConcertException(ErrorCode.TOKEN_ALREADY_EXISTS);
         }
 
         List<WaitingQueue> tokenList = waitingQueueReader.readAllActiveTokens();

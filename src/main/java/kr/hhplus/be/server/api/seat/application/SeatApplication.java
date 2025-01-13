@@ -1,5 +1,7 @@
 package kr.hhplus.be.server.api.seat.application;
 
+import kr.hhplus.be.server.common.exception.ConcertException;
+import kr.hhplus.be.server.common.exception.ErrorCode;
 import kr.hhplus.be.server.domain.concert.Concert;
 import kr.hhplus.be.server.domain.concert.components.ConcertReader;
 import kr.hhplus.be.server.domain.reservation.Reservation;
@@ -39,7 +41,7 @@ public class SeatApplication implements SeatUsecase{
     {
         User user = userReader.readByUuid(uuid);
         if (waitingQueueReader.readValidToken(user).getStatus() != WaitingQueueStatus.ACTIVE)
-            throw new RuntimeException("활성화되지 않은 토큰입니다.");
+            throw new ConcertException(ErrorCode.TOKEN_IS_INVALID);
 
         return seatReader.getAvailableSeats(concertReader.getByDate(date));
     }

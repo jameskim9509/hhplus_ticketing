@@ -1,5 +1,7 @@
 package kr.hhplus.be.server.api.payment.application;
 
+import kr.hhplus.be.server.common.exception.ConcertException;
+import kr.hhplus.be.server.common.exception.ErrorCode;
 import kr.hhplus.be.server.domain.payment.Payment;
 import kr.hhplus.be.server.domain.payment.components.PaymentWriter;
 import kr.hhplus.be.server.domain.reservation.Reservation;
@@ -37,15 +39,15 @@ public class PaymentApplication implements PaymentUsecase{
         User user = userReader.readByUuidWithLock(uuid);
         WaitingQueue token = waitingQueueReader.readValidTokenByUuidWithLock(uuid);
         if (token.getStatus() != WaitingQueueStatus.ACTIVE)
-            throw new RuntimeException("활성화되지 않은 토큰입니다.");
+            throw new ConcertException(ErrorCode.TOKEN_IS_INVALID);
 
         Reservation reservation = reservationReader.readByIdWithLock(reservationId);
         if (reservation.getExpiredAt().isBefore(LocalDateTime.now()))
-            throw new RuntimeException("만료된 예약입니다.");
+            throw new ConcertException(ErrorCode.RESERVATION_EXPIRED);
         if (reservation.getStatus() != ReservationStatus.PAYMENT_REQUIRED)
-            throw new RuntimeException("결제가 필요한 예약이 아닙니다.");
+            throw new ConcertException(ErrorCode.RESERVATION_NOT_PAYMENT_REQUIRED);
         if (user.getId() != reservation.getUser().getId())
-            throw new RuntimeException("요청자의 예약 정보가 아닙니다.");
+            throw new ConcertException(ErrorCode.RESERVATION_NOT_MATCHED);
 
         Long seatCost = reservation.getSeatCost();
         user.usePoint(seatCost);

@@ -1,5 +1,7 @@
 package kr.hhplus.be.server.domain.token.components;
 
+import kr.hhplus.be.server.common.exception.ConcertException;
+import kr.hhplus.be.server.common.exception.ErrorCode;
 import kr.hhplus.be.server.domain.user.User;
 import kr.hhplus.be.server.domain.token.WaitingQueue;
 import kr.hhplus.be.server.domain.token.repositories.WaitingQueueReaderRepository;
@@ -21,7 +23,7 @@ public class WaitingQueueReader {
         return user.getWaitingQueueList().stream()
                 .filter(t -> t.getStatus() != WaitingQueueStatus.EXPIRED)
                 .findFirst()
-                .orElseThrow(() -> new RuntimeException("존재하지 않는 토큰입니다."));
+                .orElseThrow(() -> new ConcertException(ErrorCode.TOKEN_NOT_FOUND));
     }
 
     public WaitingQueue readValidTokenByUuidWithLock(String uuid)
@@ -29,7 +31,7 @@ public class WaitingQueueReader {
         return waitingQueueReaderRepository.readTokensByUuidWithLock(uuid).stream()
                 .filter(t -> t.getStatus() != WaitingQueueStatus.EXPIRED)
                 .findFirst()
-                .orElseThrow(() -> new RuntimeException("존재하지 않는 토큰입니다."));
+                .orElseThrow(() -> new ConcertException(ErrorCode.TOKEN_NOT_FOUND));
     }
 
     public List<WaitingQueue> readAllExpiredTokens()
@@ -55,7 +57,7 @@ public class WaitingQueueReader {
 
     public WaitingQueue readActiveTokenWithMaxId()
     {
-        return waitingQueueReaderRepository.readActiveTokenLimitBy(PageRequest.of(0, 1)).orElseThrow(() -> new RuntimeException("활성화된 토큰이 없습니다."));
+        return waitingQueueReaderRepository.readActiveTokenLimitBy(PageRequest.of(0, 1)).orElseThrow(() -> new ConcertException(ErrorCode.ACTIVE_TOKEN_NOT_FOUND));
     }
 
     public boolean isValidTokenExists(User user)

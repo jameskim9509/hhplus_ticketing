@@ -1,5 +1,6 @@
 package kr.hhplus.be.server.common.exception;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
+@Slf4j
 @RestControllerAdvice
 // Spring MVC 예외까지 처리
 public class ControllerAdvice extends ResponseEntityExceptionHandler {
@@ -18,6 +20,8 @@ public class ControllerAdvice extends ResponseEntityExceptionHandler {
     public ResponseEntity<ErrorResponse> handleConcertException(ConcertException exception)
     {
         ErrorCode errCode = exception.getErrorCode();
+        log.error("{}", exception.getMessage());
+
         return ResponseEntity
                 .status(errCode.getStatus())
                 .body(
@@ -31,6 +35,9 @@ public class ControllerAdvice extends ResponseEntityExceptionHandler {
             MethodArgumentNotValidException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request
     ) {
         ErrorCode e = ErrorCode.PARAMETER_NOT_VALID;
+
+        log.error("{}", e.getMessage());
+
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
                 new ErrorResponse(e, e.getMessage())
         );

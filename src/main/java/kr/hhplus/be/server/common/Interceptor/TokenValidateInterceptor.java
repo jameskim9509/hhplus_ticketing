@@ -5,15 +5,15 @@ import jakarta.servlet.http.HttpServletResponse;
 import kr.hhplus.be.server.api.token.application.TokenApplication;
 import kr.hhplus.be.server.common.exception.ConcertException;
 import kr.hhplus.be.server.common.exception.ErrorCode;
-import kr.hhplus.be.server.domain.token.WaitingQueue;
-import kr.hhplus.be.server.domain.token.components.WaitingQueueReader;
-import kr.hhplus.be.server.domain.token.type.WaitingQueueStatus;
 import kr.hhplus.be.server.domain.user.User;
 import kr.hhplus.be.server.domain.user.components.UserReader;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class TokenValidateInterceptor implements HandlerInterceptor {
@@ -30,6 +30,9 @@ public class TokenValidateInterceptor implements HandlerInterceptor {
         UserContext.setContext(user);
 
         tokenApplication.validateToken(user);
+
+        HandlerMethod handlerMethod = (HandlerMethod) handler;
+        log.info("{} : {}", request.getRemoteAddr(),handlerMethod.getMethod());
 
         return HandlerInterceptor.super.preHandle(request, response, handler);
     }

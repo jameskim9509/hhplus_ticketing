@@ -2,15 +2,13 @@ package kr.hhplus.be.server.api.payment.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import kr.hhplus.be.server.api.payment.application.PaymentUsecase;
+import kr.hhplus.be.server.api.payment.dto.PaymentRequest;
 import kr.hhplus.be.server.api.reservation.dto.ReservationResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping
+@RequestMapping("/concerts")
 @RequiredArgsConstructor
 public class PaymentController {
     PaymentUsecase paymentUsecase;
@@ -18,12 +16,13 @@ public class PaymentController {
     @Operation(description = "예약된 좌석을 결제합니다.")
     @PatchMapping("/payment")
     public ReservationResponse pay(
-            @RequestParam("reservationId") Long reservationId,
-            @RequestParam("uuid") String uuid
-    )
+            @ModelAttribute PaymentRequest paymentRequest
+            )
     {
         return ReservationResponse.from(
-                paymentUsecase.pay(reservationId, uuid).getReservation()
+                paymentUsecase.pay(
+                        paymentRequest.reservationId()
+                ).getReservation()
         );
     }
 }

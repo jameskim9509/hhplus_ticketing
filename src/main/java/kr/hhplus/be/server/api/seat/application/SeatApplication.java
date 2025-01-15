@@ -37,12 +37,8 @@ public class SeatApplication implements SeatUsecase{
 
     @Override
     @Transactional
-    public List<Seat> getAvailableSeatsByDate(LocalDate date, String uuid)
+    public List<Seat> getAvailableSeatsByDate(LocalDate date)
     {
-        User user = userReader.readByUuid(uuid);
-        if (waitingQueueReader.readValidToken(user).getStatus() != WaitingQueueStatus.ACTIVE)
-            throw new ConcertException(ErrorCode.TOKEN_IS_INVALID);
-
         return seatReader.getAvailableSeats(concertReader.getByDate(date));
     }
 

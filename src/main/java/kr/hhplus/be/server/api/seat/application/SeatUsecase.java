@@ -6,5 +6,5 @@ import java.time.LocalDate;
 import java.util.List;
 
 public interface SeatUsecase {
-    public List<Seat> getAvailableSeatsByDate(LocalDate date, String uuid);
+    public List<Seat> getAvailableSeatsByDate(LocalDate date);
 }

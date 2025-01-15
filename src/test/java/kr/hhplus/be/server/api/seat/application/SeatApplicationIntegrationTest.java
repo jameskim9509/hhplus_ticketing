@@ -1,6 +1,7 @@
 package kr.hhplus.be.server.api.seat.application;
 
 import kr.hhplus.be.server.api.seat.dto.GetAvailableSeatsResponse;
+import kr.hhplus.be.server.common.Interceptor.UserContext;
 import kr.hhplus.be.server.domain.seat.Seat;
 import kr.hhplus.be.server.domain.token.WaitingQueue;
 import kr.hhplus.be.server.domain.token.type.WaitingQueueStatus;
@@ -49,10 +50,11 @@ class SeatApplicationIntegrationTest {
         waitingQueueJpaRepository.save(token);
         waitingQueueJpaRepository.flush();
 
+        UserContext.setContext(user);
+
         // when
         List<Seat> seatList = seatApplication.getAvailableSeatsByDate(
-                LocalDate.of(2025,7, 15),
-                user.getUuid()
+                LocalDate.of(2025,7, 15)
         );
 
         // then

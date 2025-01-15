@@ -7,5 +7,5 @@ import java.time.LocalDate;
 import java.util.List;
 
 public interface ConcertUsecase {
-    public List<Concert> getAvailableConcerts(LocalDate startDate, LocalDate endDate, String uuid);
+    public List<Concert> getAvailableConcerts(LocalDate startDate, LocalDate endDate);
 }

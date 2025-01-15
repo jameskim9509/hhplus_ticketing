@@ -1,5 +1,6 @@
 package kr.hhplus.be.server.api.seat.application;
 
+import kr.hhplus.be.server.common.Interceptor.UserContext;
 import kr.hhplus.be.server.domain.reservation.Reservation;
 import kr.hhplus.be.server.domain.reservation.components.ReservationModifier;
 import kr.hhplus.be.server.domain.reservation.components.ReservationReader;
@@ -8,6 +9,7 @@ import kr.hhplus.be.server.domain.seat.Seat;
 import kr.hhplus.be.server.domain.token.WaitingQueue;
 import kr.hhplus.be.server.domain.token.components.WaitingQueueReader;
 import kr.hhplus.be.server.domain.token.type.WaitingQueueStatus;
+import kr.hhplus.be.server.domain.user.User;
 import kr.hhplus.be.server.domain.user.components.UserReader;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -65,23 +67,5 @@ class SeatApplicationUnitTest {
         // then
         Mockito.verify(reservationModifier, Mockito.times(2))
                 .modifyReservation(Mockito.any());;
-    }
-
-    @Test
-    void 활성화되지_않은_토큰으로_좌석_조회시_에러()
-    {
-        // given
-        Mockito.doReturn(
-                WaitingQueue.builder().status(WaitingQueueStatus.WAIT).build()
-        ).when(waitingQueueReader).readValidToken(Mockito.any());
-
-        // when, then
-        Assertions.assertThatThrownBy(
-                        () -> seatApplication.getAvailableSeatsByDate(
-                                LocalDate.now(),
-                                UUID.randomUUID().toString()
-                        )
-                ).isInstanceOf(RuntimeException.class)
-                .hasMessage("활성화되지 않은 토큰입니다.");
     }
 }

@@ -1,5 +1,6 @@
 package kr.hhplus.be.server.api.payment.application;
 
+import kr.hhplus.be.server.common.Interceptor.UserContext;
 import kr.hhplus.be.server.common.exception.ConcertException;
 import kr.hhplus.be.server.common.exception.ErrorCode;
 import kr.hhplus.be.server.domain.payment.Payment;
@@ -34,10 +35,10 @@ public class PaymentApplication implements PaymentUsecase{
 
     @Override
     @Transactional
-    public Payment pay(Long reservationId, String uuid)
+    public Payment pay(Long reservationId)
     {
-        User user = userReader.readByUuidWithLock(uuid);
-        WaitingQueue token = waitingQueueReader.readValidTokenByUuidWithLock(uuid);
+        User user = UserContext.getContext();
+        WaitingQueue token = waitingQueueReader.readValidTokenByUuidWithLock(user.getUuid());
         if (token.getStatus() != WaitingQueueStatus.ACTIVE)
             throw new ConcertException(ErrorCode.TOKEN_IS_INVALID);
 
@@ -46,7 +47,7 @@ public class PaymentApplication implements PaymentUsecase{
             throw new ConcertException(ErrorCode.RESERVATION_EXPIRED);
         if (reservation.getStatus() != ReservationStatus.PAYMENT_REQUIRED)
             throw new ConcertException(ErrorCode.RESERVATION_NOT_PAYMENT_REQUIRED);
-        if (user.getId() != reservation.getUser().getId())
+        if (user.getId().longValue() != reservation.getUser().getId().longValue())
             throw new ConcertException(ErrorCode.RESERVATION_NOT_MATCHED);
 
         Long seatCost = reservation.getSeatCost();

@@ -1,5 +1,6 @@
 package kr.hhplus.be.server.api.reservation.application;
 
+import kr.hhplus.be.server.common.Interceptor.UserContext;
 import kr.hhplus.be.server.domain.concert.Concert;
 import kr.hhplus.be.server.domain.concert.components.ConcertReader;
 import kr.hhplus.be.server.domain.reservation.Reservation;
@@ -12,6 +13,7 @@ import kr.hhplus.be.server.domain.seat.type.SeatStatus;
 import kr.hhplus.be.server.domain.token.WaitingQueue;
 import kr.hhplus.be.server.domain.token.components.WaitingQueueModifier;
 import kr.hhplus.be.server.domain.token.components.WaitingQueueReader;
+import kr.hhplus.be.server.domain.token.components.WaitingQueueWriter;
 import kr.hhplus.be.server.domain.token.type.WaitingQueueStatus;
 import kr.hhplus.be.server.domain.user.User;
 import kr.hhplus.be.server.domain.user.components.UserReader;
@@ -36,6 +38,8 @@ class ReservationApplicationUnitTest {
     @Mock
     private WaitingQueueReader waitingQueueReader;
     @Mock
+    private WaitingQueueWriter waitingQueueWriter;
+    @Mock
     private ConcertReader concertReader;
     @Mock
     private SeatReader seatReader;
@@ -52,14 +56,15 @@ class ReservationApplicationUnitTest {
     @Test
     void reserveSeat() {
         // given
-        Mockito.doReturn(User.builder().build())
-                .when(userReader).readByUuid(Mockito.anyString());
+        UserContext.setContext(
+                User.builder().uuid(UUID.randomUUID().toString()).build()
+        );
 
         Mockito.doReturn(
                 WaitingQueue.builder()
                         .status(WaitingQueueStatus.ACTIVE)
                         .build()
-        ).when(waitingQueueReader).readValidTokenByUuidWithLock(Mockito.anyString());
+        ).when(waitingQueueReader).readValidToken(Mockito.any());
 
         Mockito.doReturn(Concert.builder().id(1L).build())
                 .when(concertReader).getByDate(Mockito.any());
@@ -75,7 +80,7 @@ class ReservationApplicationUnitTest {
         ArgumentCaptor<WaitingQueue> tokenCaptor = ArgumentCaptor.forClass(WaitingQueue.class);
 
         // when
-        reservationApplication.reserveSeat(LocalDate.now(), 10L, UUID.randomUUID().toString());
+        reservationApplication.reserveSeat(LocalDate.now(), 10L);
         Mockito.verify(reservationWriter).writeReservation(reservationCaptor.capture());
         Mockito.verify(seatModifier).modifySeat(seatCaptor.capture());
         Mockito.verify(waitingQueueModifier).modifyToken(tokenCaptor.capture());
@@ -93,30 +98,12 @@ class ReservationApplicationUnitTest {
     }
 
     @Test
-    void 활성화되지_않은_토큰으로_예약시_에러()
-    {
-        // given
-        Mockito.doReturn(
-                WaitingQueue.builder().status(WaitingQueueStatus.WAIT).build()
-        ).when(waitingQueueReader).readValidTokenByUuidWithLock(Mockito.any());
-
-        // when, then
-        Assertions.assertThatThrownBy(
-                        () -> reservationApplication.reserveSeat(
-                                LocalDate.now(),
-                                30L,
-                                UUID.randomUUID().toString()
-                        )
-                ).isInstanceOf(RuntimeException.class)
-                .hasMessage("활성화되지 않은 토큰입니다.");
-    }
-
-    @Test
     void 요청자가_요청하지_않은_예약_조회시_에러()
     {
         // given
-        Mockito.doReturn(User.builder().id(1L).build())
-                .when(userReader).readByUuid(Mockito.anyString());
+        UserContext.setContext(
+                User.builder().id(1L).uuid(UUID.randomUUID().toString()).build()
+        );
 
         Mockito.doReturn(
                 Reservation.builder()
@@ -126,7 +113,7 @@ class ReservationApplicationUnitTest {
 
         // when
         Assertions.assertThatThrownBy(
-                        () -> reservationApplication.getReservation(1L, UUID.randomUUID().toString())
+                        () -> reservationApplication.getReservation(1L)
                 ).isInstanceOf(RuntimeException.class)
                 .hasMessage("요청자의 예약 정보가 아닙니다.");
     }

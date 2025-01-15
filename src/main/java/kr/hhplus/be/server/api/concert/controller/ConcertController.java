@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping
+@RequestMapping("/concerts")
 @RequiredArgsConstructor
 public class ConcertController {
     private final ConcertUsecase concertUsecase;
@@ -25,8 +25,7 @@ public class ConcertController {
         return GetAvailableConcertsResponse.from(
                 concertUsecase.getAvailableConcerts(
                         getAvailableConcertRequest.startDate(),
-                        getAvailableConcertRequest.endDate(),
-                        getAvailableConcertRequest.uuid()
+                        getAvailableConcertRequest.endDate()
                 )
         );
     }

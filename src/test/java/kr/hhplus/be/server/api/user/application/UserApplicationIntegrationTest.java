@@ -1,6 +1,7 @@
 package kr.hhplus.be.server.api.user.application;
 
 import kr.hhplus.be.server.api.user.dto.ChargePointResponse;
+import kr.hhplus.be.server.common.Interceptor.UserContext;
 import kr.hhplus.be.server.domain.user.User;
 import kr.hhplus.be.server.infrastructure.core.user.UserJpaRepository;
 import org.assertj.core.api.Assertions;
@@ -37,10 +38,12 @@ class UserApplicationIntegrationTest {
         );
         userJpaRepository.flush();
 
+        UserContext.setContext(user);
+
         // when
         User returnedUser =
                 userApplication.chargePoint(
-                        50_000L, user.getUuid()
+                        50_000L
                 );
 
         // then
@@ -67,9 +70,10 @@ class UserApplicationIntegrationTest {
         {
             excecutorService.submit(() -> {
                 try{
+                    UserContext.setContext(user);
+
                     userApplication.chargePoint(
-                            10000L,
-                            user.getUuid()
+                            10000L
                     );
                 }
                 finally {

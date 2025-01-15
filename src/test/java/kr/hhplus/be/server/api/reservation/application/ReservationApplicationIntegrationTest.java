@@ -1,5 +1,6 @@
 package kr.hhplus.be.server.api.reservation.application;
 
+import kr.hhplus.be.server.common.Interceptor.UserContext;
 import kr.hhplus.be.server.domain.reservation.Reservation;
 import kr.hhplus.be.server.domain.reservation.type.ReservationStatus;
 import kr.hhplus.be.server.domain.seat.type.SeatStatus;
@@ -52,12 +53,13 @@ class ReservationApplicationIntegrationTest {
         waitingQueueJpaRepository.save(token);
         waitingQueueJpaRepository.flush();
 
+        UserContext.setContext(user);
+
         // when
         Reservation reservation =
                 reservationApplication.reserveSeat(
                         LocalDate.of(2025, 7, 1),
-                        25L,
-                        user.getUuid()
+                        25L
                 );
 
         // then
@@ -89,10 +91,11 @@ class ReservationApplicationIntegrationTest {
             futures.add(CompletableFuture.supplyAsync(
                     () -> {
                         try {
+                            UserContext.setContext(user);
+
                             reservationApplication.reserveSeat(
                                     LocalDate.of(2025,7,1),
-                                    30L,
-                                    user.getUuid()
+                                    30L
                             );
                             return true;
                         } catch (RuntimeException re) {

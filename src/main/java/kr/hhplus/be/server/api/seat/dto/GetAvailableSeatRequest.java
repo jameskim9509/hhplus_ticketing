@@ -6,17 +6,16 @@ import lombok.Getter;
 
 import java.time.LocalDate;
 
-public record GetAvailableSeatRequest(LocalDate date, String uuid) {
-    public GetAvailableSeatRequest(LocalDate date, String uuid)
+public record GetAvailableSeatRequest(LocalDate date) {
+    public GetAvailableSeatRequest(LocalDate date)
     {
-        validate(date, uuid);
+        validate(date);
         this.date = date;
-        this.uuid = uuid;
     }
 
-    private void validate(LocalDate date, String uuid)
+    private void validate(LocalDate date)
     {
-        if(date == null || uuid == null)
+        if(date == null)
             throw new ConcertException(ErrorCode.PARAMETER_NOT_VALID);
         if(date.isBefore(LocalDate.now()))
             throw new ConcertException(ErrorCode.DATE_IS_INVALID);

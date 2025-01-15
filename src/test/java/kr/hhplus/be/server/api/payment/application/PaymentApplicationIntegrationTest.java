@@ -1,6 +1,7 @@
 package kr.hhplus.be.server.api.payment.application;
 
 import kr.hhplus.be.server.api.reservation.application.ReservationApplication;
+import kr.hhplus.be.server.common.Interceptor.UserContext;
 import kr.hhplus.be.server.domain.payment.Payment;
 import kr.hhplus.be.server.domain.reservation.Reservation;
 import kr.hhplus.be.server.domain.reservation.type.ReservationStatus;
@@ -66,11 +67,12 @@ class PaymentApplicationIntegrationTest {
         );
         reservationJpaRepository.flush();
 
+        UserContext.setContext(user);
+
         // when
         Payment payment =
                 paymentApplication.pay(
-                        reservation.getId(),
-                        user.getUuid()
+                        reservation.getId()
                 );
 
         // then
@@ -114,9 +116,10 @@ class PaymentApplicationIntegrationTest {
             futures.add(CompletableFuture.supplyAsync(
                     () -> {
                         try {
+                            UserContext.setContext(user);
+
                             paymentApplication.pay(
-                                    reservation.getId(),
-                                    user.getUuid()
+                                    reservation.getId()
                             );
                             return true;
                         } catch (RuntimeException re) {

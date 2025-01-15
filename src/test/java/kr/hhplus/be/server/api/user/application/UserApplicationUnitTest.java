@@ -1,5 +1,6 @@
 package kr.hhplus.be.server.api.user.application;
 
+import kr.hhplus.be.server.common.Interceptor.UserContext;
 import kr.hhplus.be.server.domain.user.User;
 import kr.hhplus.be.server.domain.user.components.UserModifier;
 import kr.hhplus.be.server.domain.user.components.UserReader;
@@ -27,16 +28,17 @@ class UserApplicationUnitTest {
     @Test
     void chargePoint() {
         // given
-        Mockito.doReturn(
+        UserContext.setContext(
                 User.builder()
                         .balance(0L)
+                        .uuid(UUID.randomUUID().toString())
                         .build()
-        ).when(userReader).readByUuidWithLock(Mockito.anyString());
+        );
 
         ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
 
         // when
-        userApplication.chargePoint(10000L, UUID.randomUUID().toString());
+        userApplication.chargePoint(10000L);
 
         Mockito.verify(userModifier).modifyUser(userCaptor.capture());
         User capturedUser = userCaptor.getValue();

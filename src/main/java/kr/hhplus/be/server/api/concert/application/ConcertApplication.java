@@ -25,12 +25,8 @@ public class ConcertApplication implements ConcertUsecase{
 
     @Transactional
     @Override
-    public List<Concert> getAvailableConcerts(LocalDate startDate, LocalDate endDate, String uuid)
+    public List<Concert> getAvailableConcerts(LocalDate startDate, LocalDate endDate)
     {
-        User user = userReader.readByUuid(uuid);
-        if (waitingQueueReader.readValidToken(user).getStatus() != WaitingQueueStatus.ACTIVE)
-            throw new ConcertException(ErrorCode.TOKEN_IS_INVALID);
-
         return concertReader.readByDateBetween(startDate, endDate);
     }
 }

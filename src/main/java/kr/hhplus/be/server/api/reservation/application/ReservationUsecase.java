@@ -5,6 +5,6 @@ import kr.hhplus.be.server.domain.reservation.Reservation;
 import java.time.LocalDate;
 
 public interface ReservationUsecase {
-    public Reservation getReservation(Long reservationId, String uuid);
-    public Reservation reserveSeat(LocalDate date, Long seatNumber, String uuid);
+    public Reservation getReservation(Long reservationId);
+    public Reservation reserveSeat(LocalDate date, Long seatNumber);
 }

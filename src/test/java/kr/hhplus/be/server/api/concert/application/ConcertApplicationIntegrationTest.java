@@ -1,6 +1,7 @@
 package kr.hhplus.be.server.api.concert.application;
 
 import kr.hhplus.be.server.api.concert.dto.GetAvailableConcertsResponse;
+import kr.hhplus.be.server.common.Interceptor.UserContext;
 import kr.hhplus.be.server.domain.concert.Concert;
 import kr.hhplus.be.server.domain.token.WaitingQueue;
 import kr.hhplus.be.server.domain.token.type.WaitingQueueStatus;
@@ -47,11 +48,12 @@ class ConcertApplicationIntegrationTest {
         waitingQueueJpaRepository.save(token);
         waitingQueueJpaRepository.flush();
 
+        UserContext.setContext(user);
+
         // when
         List<Concert> concertList = concertApplication.getAvailableConcerts(
                 LocalDate.of(2025,7, 1),
-                LocalDate.of(2025,8,1),
-                "1234-5678"
+                LocalDate.of(2025,8,1)
         );
 
         // then

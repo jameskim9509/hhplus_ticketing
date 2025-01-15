@@ -1,5 +1,6 @@
 package kr.hhplus.be.server.api.token.application;
 
+import kr.hhplus.be.server.common.Interceptor.UserContext;
 import kr.hhplus.be.server.common.exception.ConcertException;
 import kr.hhplus.be.server.common.exception.ErrorCode;
 import kr.hhplus.be.server.domain.token.WaitingQueue;
@@ -74,9 +75,9 @@ public class TokenApplication implements TokenUsecase{
 
     @Override
     @Transactional
-    public Long getToken(String uuid)
+    public Long getToken()
     {
-        User user = userReader.readByUuid(uuid);
+        User user = UserContext.getContext();
         WaitingQueue token = waitingQueueReader.readValidToken(user);
 
         if (token.getStatus() == WaitingQueueStatus.ACTIVE)
@@ -88,9 +89,20 @@ public class TokenApplication implements TokenUsecase{
     }
 
     @Transactional
+    public void validateToken(User user)
+    {
+        WaitingQueue token = waitingQueueReader.readValidToken(user);
+        if (token.getStatus() != WaitingQueueStatus.ACTIVE)
+            throw new ConcertException(ErrorCode.TOKEN_IS_INVALID);
+    }
+
+    @Transactional
     @Scheduled(cron = "")
     public void updateWaitingQueue()
     {
+        // delete Token 스케줄러를 updateToken 스케줄러와 합침으로써 스케줄러간 충돌 해결
+        waitingQueueModifier.deleteAllTokens(waitingQueueReader.readAllExpiredTokens());
+
         List<WaitingQueue> tokenList = waitingQueueReader.readAllActiveTokensWithLock();
         tokenList.stream()
                 .filter(t -> t.getExpiredAt().isBefore(LocalDateTime.now()))
@@ -109,12 +121,5 @@ public class TokenApplication implements TokenUsecase{
                         waitingQueueModifier.modifyToken(t);
                     });
         }
-    }
-
-    @Transactional
-    @Scheduled(cron = "")
-    public void deleteExpiredToken()
-    {
-        waitingQueueModifier.deleteAllTokens(waitingQueueReader.readAllExpiredTokens());
     }
 }

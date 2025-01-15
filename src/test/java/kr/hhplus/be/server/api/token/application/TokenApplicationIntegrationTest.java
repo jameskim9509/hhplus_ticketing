@@ -2,6 +2,7 @@ package kr.hhplus.be.server.api.token.application;
 
 import kr.hhplus.be.server.api.token.dto.CreateTokenResponse;
 import kr.hhplus.be.server.api.token.dto.GetTokenResponse;
+import kr.hhplus.be.server.common.Interceptor.UserContext;
 import kr.hhplus.be.server.domain.token.WaitingQueue;
 import kr.hhplus.be.server.domain.user.User;
 import kr.hhplus.be.server.infrastructure.core.user.UserJpaRepository;
@@ -36,11 +37,13 @@ class TokenApplicationIntegrationTest {
         );
         userJpaRepository.flush();
 
+        UserContext.setContext(user);
+
         // when
         WaitingQueue waitingQueue = tokenApplication.createToken(user.getId());
         String uuid = waitingQueue.getUser().getUuid();
 
-        Long waitingNumber = tokenApplication.getToken(uuid);
+        Long waitingNumber = tokenApplication.getToken();
 
         // then
         Assertions.assertThat(waitingNumber).isEqualTo(0L);

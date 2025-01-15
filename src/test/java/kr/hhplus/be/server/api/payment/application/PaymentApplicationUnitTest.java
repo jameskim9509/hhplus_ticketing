@@ -1,5 +1,6 @@
 package kr.hhplus.be.server.api.payment.application;
 
+import kr.hhplus.be.server.common.Interceptor.UserContext;
 import kr.hhplus.be.server.domain.payment.components.PaymentWriter;
 import kr.hhplus.be.server.domain.reservation.Reservation;
 import kr.hhplus.be.server.domain.reservation.components.ReservationModifier;
@@ -47,12 +48,13 @@ class PaymentApplicationUnitTest {
     @Test
     void pay() {
         // given
-        Mockito.doReturn(
+        UserContext.setContext(
                 User.builder()
                         .id(1L)
+                        .uuid(UUID.randomUUID().toString())
                         .balance(10000L)
                         .build()
-        ).when(userReader).readByUuidWithLock(Mockito.anyString());
+        );
 
         Mockito.doReturn(
                 WaitingQueue.builder()
@@ -74,7 +76,7 @@ class PaymentApplicationUnitTest {
         ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
 
         // when
-        paymentApplication.pay(1L, UUID.randomUUID().toString());
+        paymentApplication.pay(1L);
 
         Mockito.verify(waitingQueueModifier).modifyToken(tokenCaptor.capture());
         Mockito.verify(userModifier).modifyUser(userCaptor.capture());
@@ -94,6 +96,14 @@ class PaymentApplicationUnitTest {
     void 활성화되지_않은_토큰으로_결제시_에러()
     {
         // given
+        UserContext.setContext(
+                User.builder()
+                        .id(1L)
+                        .uuid(UUID.randomUUID().toString())
+                        .balance(10000L)
+                        .build()
+        );
+
         Mockito.doReturn(
                 WaitingQueue.builder().status(WaitingQueueStatus.WAIT).build()
         ).when(waitingQueueReader).readValidTokenByUuidWithLock(Mockito.any());
@@ -101,8 +111,7 @@ class PaymentApplicationUnitTest {
         // when, then
         Assertions.assertThatThrownBy(
                         () -> paymentApplication.pay(
-                                5L,
-                                UUID.randomUUID().toString()
+                                5L
                         )
                 ).isInstanceOf(RuntimeException.class)
                 .hasMessage("활성화되지 않은 토큰입니다.");
@@ -112,6 +121,14 @@ class PaymentApplicationUnitTest {
     void 만료된_예약_결제시_에러()
     {
         // given
+        UserContext.setContext(
+                User.builder()
+                        .id(1L)
+                        .uuid(UUID.randomUUID().toString())
+                        .balance(10000L)
+                        .build()
+        );
+
         Mockito.doReturn(
                 WaitingQueue.builder()
                         .status(WaitingQueueStatus.ACTIVE)
@@ -126,8 +143,7 @@ class PaymentApplicationUnitTest {
         // when, then
         Assertions.assertThatThrownBy(
                         () -> paymentApplication.pay(
-                                5L,
-                                UUID.randomUUID().toString()
+                                5L
                         )
                 ).isInstanceOf(RuntimeException.class)
                 .hasMessage("만료된 예약입니다.");
@@ -137,6 +153,14 @@ class PaymentApplicationUnitTest {
     void 결제가_필요없는_예약_결제시_에러()
     {
         // given
+        UserContext.setContext(
+                User.builder()
+                        .id(1L)
+                        .uuid(UUID.randomUUID().toString())
+                        .balance(10000L)
+                        .build()
+        );
+
         Mockito.doReturn(
                 WaitingQueue.builder()
                         .status(WaitingQueueStatus.ACTIVE)
@@ -152,8 +176,7 @@ class PaymentApplicationUnitTest {
         // when, then
         Assertions.assertThatThrownBy(
                         () -> paymentApplication.pay(
-                                5L,
-                                UUID.randomUUID().toString()
+                                5L
                         )
                 ).isInstanceOf(RuntimeException.class)
                 .hasMessage("결제가 필요한 예약이 아닙니다.");
@@ -163,8 +186,13 @@ class PaymentApplicationUnitTest {
     void 요청자가_예약하지_않은_예약_결제시_에러()
     {
         // given
-        Mockito.doReturn(User.builder().id(1L).build())
-                .when(userReader).readByUuidWithLock(Mockito.anyString());
+        UserContext.setContext(
+                User.builder()
+                        .id(1L)
+                        .uuid(UUID.randomUUID().toString())
+                        .balance(10000L)
+                        .build()
+        );
 
         Mockito.doReturn(
                 WaitingQueue.builder()
@@ -183,8 +211,7 @@ class PaymentApplicationUnitTest {
         // when, then
         Assertions.assertThatThrownBy(
                         () -> paymentApplication.pay(
-                                5L,
-                                UUID.randomUUID().toString()
+                                5L
                         )
                 ).isInstanceOf(RuntimeException.class)
                 .hasMessage("요청자의 예약 정보가 아닙니다.");

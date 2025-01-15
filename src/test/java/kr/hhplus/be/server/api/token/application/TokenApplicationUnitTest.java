@@ -1,5 +1,6 @@
 package kr.hhplus.be.server.api.token.application;
 
+import kr.hhplus.be.server.common.Interceptor.UserContext;
 import kr.hhplus.be.server.domain.token.WaitingQueue;
 import kr.hhplus.be.server.domain.token.components.WaitingQueueModifier;
 import kr.hhplus.be.server.domain.token.components.WaitingQueueReader;
@@ -18,6 +19,7 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageRequest;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -78,10 +80,14 @@ class TokenApplicationUnitTest {
     @Test
     void getActiveToken() {
         // given
+        UserContext.setContext(
+                User.builder().uuid(UUID.randomUUID().toString()).build()
+        );
+
         Mockito.doReturn(WaitingQueue.builder().status(WaitingQueueStatus.ACTIVE).build()).when(waitingQueueReader).readValidToken(Mockito.any());
 
         // when
-        Long waitingNumber = tokenApplication.getToken(UUID.randomUUID().toString());
+        Long waitingNumber = tokenApplication.getToken();
 
         // then
         Assertions.assertThat(waitingNumber).isEqualTo(0L);
@@ -90,6 +96,10 @@ class TokenApplicationUnitTest {
     @Test
     void getWaitToken() {
         // given
+        UserContext.setContext(
+                User.builder().uuid(UUID.randomUUID().toString()).build()
+        );
+
         Mockito.doReturn(
                 WaitingQueue.builder()
                         .id(20L)
@@ -105,7 +115,7 @@ class TokenApplicationUnitTest {
         ).when(waitingQueueReader).readActiveTokenWithMaxId();
 
         // when
-        Long waitingNumber = tokenApplication.getToken(UUID.randomUUID().toString());
+        Long waitingNumber = tokenApplication.getToken();
 
         // then
         Assertions.assertThat(waitingNumber).isEqualTo(10L);
@@ -163,6 +173,23 @@ class TokenApplicationUnitTest {
 
         PageRequest pageRequest = pageCaptor.getValue();
         Assertions.assertThat(pageRequest.getPageSize()).isEqualTo(7);
+    }
+
+    @Test
+    void 활성화되지_않은_토큰으로_콘서트_조회시_에러()
+    {
+        // given
+        Mockito.doReturn(
+                WaitingQueue.builder().status(WaitingQueueStatus.WAIT).build()
+        ).when(waitingQueueReader).readValidToken(Mockito.any());
+
+        // when, then
+        Assertions.assertThatThrownBy(
+                        () -> tokenApplication.validateToken(
+                                User.builder().uuid(UUID.randomUUID().toString()).build()
+                        )
+                ).isInstanceOf(RuntimeException.class)
+                .hasMessage("활성화되지 않은 토큰입니다.");
     }
 
     @Test

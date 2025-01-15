@@ -4,25 +4,23 @@ import io.swagger.v3.oas.annotations.Operation;
 import kr.hhplus.be.server.api.token.application.TokenUsecase;
 import kr.hhplus.be.server.api.token.dto.CreateTokenRequest;
 import kr.hhplus.be.server.api.token.dto.CreateTokenResponse;
-import kr.hhplus.be.server.api.token.dto.GetTokenRequest;
 import kr.hhplus.be.server.api.token.dto.GetTokenResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping
+@RequestMapping("concerts")
 @RequiredArgsConstructor
 public class TokenController {
     private final TokenUsecase tokenUsecase;
 
     @Operation(description = "토큰을 조회합니다.")
-    @GetMapping("/tickets/tokens/")
+    @GetMapping("tickets/tokens/")
     public GetTokenResponse getToken(
-            @ModelAttribute GetTokenRequest getTokenRequest
     )
     {
         return GetTokenResponse.from(
-                tokenUsecase.getToken(getTokenRequest.uuid())
+                tokenUsecase.getToken()
         );
     }
 

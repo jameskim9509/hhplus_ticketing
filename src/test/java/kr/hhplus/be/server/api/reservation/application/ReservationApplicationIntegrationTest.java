@@ -1,10 +1,12 @@
 package kr.hhplus.be.server.api.reservation.application;
 
+import kr.hhplus.be.server.api.token.application.TokenApplication;
 import kr.hhplus.be.server.common.Interceptor.UserContext;
 import kr.hhplus.be.server.domain.reservation.Reservation;
 import kr.hhplus.be.server.domain.reservation.type.ReservationStatus;
 import kr.hhplus.be.server.domain.seat.type.SeatStatus;
 import kr.hhplus.be.server.domain.token.WaitingQueue;
+import kr.hhplus.be.server.domain.token.components.WaitingQueueReader;
 import kr.hhplus.be.server.domain.token.type.WaitingQueueStatus;
 import kr.hhplus.be.server.domain.user.User;
 import kr.hhplus.be.server.infrastructure.core.user.UserJpaRepository;
@@ -17,10 +19,14 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 
 @ActiveProfiles("test")
@@ -32,7 +38,12 @@ class ReservationApplicationIntegrationTest {
     private WaitingQueueJpaRepository waitingQueueJpaRepository;
 
     @Autowired
+    private WaitingQueueReader waitingQueueReader;
+
+    @Autowired
     private ReservationApplication reservationApplication;
+    @Autowired
+    private TokenApplication tokenApplication;
 
     @Transactional
     @Test
@@ -68,8 +79,7 @@ class ReservationApplicationIntegrationTest {
     }
 
     @Test
-    void 동시에_3번_예약하면_2번_오류()
-    {
+    void 동시에_3번_예약하면_2번_오류() {
         // given
         User user = userJpaRepository.save(
                 User.builder()
@@ -87,14 +97,14 @@ class ReservationApplicationIntegrationTest {
 
         // when
         List<CompletableFuture<Boolean>> futures = new ArrayList<>();
-        for(int i = 0; i < 3; i++) {
+        for (int i = 0; i < 3; i++) {
             futures.add(CompletableFuture.supplyAsync(
                     () -> {
                         try {
                             UserContext.setContext(user);
 
                             reservationApplication.reserveSeat(
-                                    LocalDate.of(2025,7,1),
+                                    LocalDate.of(2025, 7, 1),
                                     30L
                             );
                             return true;

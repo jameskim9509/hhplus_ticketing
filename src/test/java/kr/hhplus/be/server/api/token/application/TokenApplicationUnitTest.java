@@ -19,7 +19,6 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageRequest;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -59,7 +58,7 @@ class TokenApplicationUnitTest {
                         WaitingQueue.builder().build(),
                         WaitingQueue.builder().build()
                 )
-        ).when(waitingQueueReader).readAllActiveTokens();
+        ).when(waitingQueueReader).readAllActiveTokensWithLock();
 
         ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
         ArgumentCaptor<WaitingQueue> tokenCaptor =ArgumentCaptor.forClass(WaitingQueue.class);

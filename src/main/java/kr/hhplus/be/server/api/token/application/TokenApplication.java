@@ -55,7 +55,7 @@ public class TokenApplication implements TokenUsecase{
             throw new ConcertException(ErrorCode.TOKEN_ALREADY_EXISTS);
         }
 
-        List<WaitingQueue> tokenList = waitingQueueReader.readAllActiveTokens();
+        List<WaitingQueue> tokenList = waitingQueueReader.readAllActiveTokensWithLock();
 
         WaitingQueue token = WaitingQueue.builder()
                 .build();

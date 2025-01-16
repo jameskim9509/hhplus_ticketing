@@ -38,9 +38,7 @@ public class PaymentApplication implements PaymentUsecase{
     public Payment pay(Long reservationId)
     {
         User user = UserContext.getContext();
-        WaitingQueue token = waitingQueueReader.readValidTokenByUuidWithLock(user.getUuid());
-        if (token.getStatus() != WaitingQueueStatus.ACTIVE)
-            throw new ConcertException(ErrorCode.TOKEN_IS_INVALID);
+        WaitingQueue token = waitingQueueReader.readValidToken(user);
 
         Reservation reservation = reservationReader.readByIdWithLock(reservationId);
         if (reservation.getExpiredAt().isBefore(LocalDateTime.now()))

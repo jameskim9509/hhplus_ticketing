@@ -60,7 +60,7 @@ class PaymentApplicationUnitTest {
                 WaitingQueue.builder()
                         .status(WaitingQueueStatus.ACTIVE)
                         .build()
-        ).when(waitingQueueReader).readValidTokenByUuidWithLock(Mockito.anyString());
+        ).when(waitingQueueReader).readValidToken(Mockito.any());
 
         Mockito.doReturn(
                 Reservation.builder()
@@ -91,31 +91,6 @@ class PaymentApplicationUnitTest {
         Assertions.assertThat(capturedUser.getBalance()).isEqualTo(4000L);
         Assertions.assertThat(capturedReservation.getStatus()).isEqualTo(ReservationStatus.RESERVED);
     }
-    
-    @Test
-    void 활성화되지_않은_토큰으로_결제시_에러()
-    {
-        // given
-        UserContext.setContext(
-                User.builder()
-                        .id(1L)
-                        .uuid(UUID.randomUUID().toString())
-                        .balance(10000L)
-                        .build()
-        );
-
-        Mockito.doReturn(
-                WaitingQueue.builder().status(WaitingQueueStatus.WAIT).build()
-        ).when(waitingQueueReader).readValidTokenByUuidWithLock(Mockito.any());
-
-        // when, then
-        Assertions.assertThatThrownBy(
-                        () -> paymentApplication.pay(
-                                5L
-                        )
-                ).isInstanceOf(RuntimeException.class)
-                .hasMessage("활성화되지 않은 토큰입니다.");
-    }
 
     @Test
     void 만료된_예약_결제시_에러()
@@ -133,7 +108,7 @@ class PaymentApplicationUnitTest {
                 WaitingQueue.builder()
                         .status(WaitingQueueStatus.ACTIVE)
                         .build()
-        ).when(waitingQueueReader).readValidTokenByUuidWithLock(Mockito.anyString());
+        ).when(waitingQueueReader).readValidToken(Mockito.any());
         Mockito.doReturn(
                 Reservation.builder()
                         .expiredAt(LocalDateTime.now().minusMinutes(1))
@@ -165,7 +140,7 @@ class PaymentApplicationUnitTest {
                 WaitingQueue.builder()
                         .status(WaitingQueueStatus.ACTIVE)
                         .build()
-        ).when(waitingQueueReader).readValidTokenByUuidWithLock(Mockito.anyString());
+        ).when(waitingQueueReader).readValidToken(Mockito.any());
         Mockito.doReturn(
                 Reservation.builder()
                         .expiredAt(LocalDateTime.now().plusMinutes(5))
@@ -198,7 +173,7 @@ class PaymentApplicationUnitTest {
                 WaitingQueue.builder()
                         .status(WaitingQueueStatus.ACTIVE)
                         .build()
-        ).when(waitingQueueReader).readValidTokenByUuidWithLock(Mockito.anyString());
+        ).when(waitingQueueReader).readValidToken(Mockito.any());
 
         Mockito.doReturn(
                 Reservation.builder()

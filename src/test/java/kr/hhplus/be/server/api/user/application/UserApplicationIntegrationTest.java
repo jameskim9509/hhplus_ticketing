@@ -20,6 +20,7 @@ import java.util.concurrent.Executors;
 @ActiveProfiles("test")
 @SpringBootTest
 class UserApplicationIntegrationTest {
+
     @Autowired
     private UserJpaRepository userJpaRepository;
 

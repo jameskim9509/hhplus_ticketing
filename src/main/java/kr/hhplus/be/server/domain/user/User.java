@@ -33,6 +33,9 @@ public class User {
     @Builder.Default
     private List<WaitingQueue> waitingQueueList = new ArrayList<>();
 
+    @Version
+    private int version;
+
     public void chargePoint(Long chargePoint)
     {
         if (MAX_POINT < this.balance + chargePoint)

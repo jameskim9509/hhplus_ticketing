@@ -13,8 +13,13 @@ public class UserReaderRepositoryImpl implements UserReaderRepository {
     private final UserJpaRepository userJpaRepository;
 
     @Override
-    public Optional<User> readByIdWithLock(Long userId) {
-        return userJpaRepository.findByIdWithLock(userId);
+    public Optional<User> readByIdWithOptimisticLock(Long userId) {
+        return userJpaRepository.findByIdWithOptimisticLock(userId);
+    }
+
+    @Override
+    public Optional<User> readByIdWithPessimisticLock(Long userId) {
+        return userJpaRepository.findByIdWithPessimisticLock(userId);
     }
 
     @Override

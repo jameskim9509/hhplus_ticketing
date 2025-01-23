@@ -40,7 +40,7 @@ class UserApplicationUnitTest {
         // when
         userApplication.chargePoint(10000L);
 
-        Mockito.verify(userModifier).modifyUser(userCaptor.capture());
+        Mockito.verify(userModifier).modifyUserWithoutVersion(userCaptor.capture());
         User capturedUser = userCaptor.getValue();
 
         //then

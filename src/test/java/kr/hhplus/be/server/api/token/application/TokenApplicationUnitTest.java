@@ -44,7 +44,7 @@ class TokenApplicationUnitTest {
         //given
         Mockito.doReturn(
                 User.builder().build()
-        ).when(userReader).readByIdWithLock(Mockito.anyLong());
+        ).when(userReader).readByIdWithOptimisticLock(Mockito.anyLong());
         Mockito.doReturn(
                 List.of(
                         WaitingQueue.builder().build(),
@@ -196,7 +196,7 @@ class TokenApplicationUnitTest {
     {
         // given
         Mockito.doReturn(User.builder().build())
-                .when(userReader).readByIdWithLock(Mockito.anyLong());
+                .when(userReader).readByIdWithOptimisticLock(Mockito.anyLong());
         Mockito.doReturn(true)
                 .when(waitingQueueReader)
                 .isValidTokenExists(Mockito.any());

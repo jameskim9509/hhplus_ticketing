@@ -16,4 +16,8 @@ public class UserModifier {
     {
         return userModifierRepository.modifyUser(user);
     }
+    public int modifyUserWithoutVersion(User user)
+    {
+        return userModifierRepository.modifyUserWithoutVersion(user);
+    }
 }

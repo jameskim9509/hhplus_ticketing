@@ -6,7 +6,8 @@ import java.util.Optional;
 
 public interface UserReaderRepository {
     public Optional<User> readById(Long userId);
-    public Optional<User> readByIdWithLock(Long userId);
+    public Optional<User> readByIdWithOptimisticLock(Long userId);
+    public Optional<User> readByIdWithPessimisticLock(Long userId);
     public Optional<User> readByUuid(String uuid);
     public Optional<User> readByUuidWithLock(String uuid);
 }

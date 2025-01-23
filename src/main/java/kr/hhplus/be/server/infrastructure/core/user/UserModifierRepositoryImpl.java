@@ -14,4 +14,9 @@ public class UserModifierRepositoryImpl implements UserModifierRepository {
     public User modifyUser(User user) {
         return userJpaRepository.save(user);
     }
+
+    @Override
+    public int modifyUserWithoutVersion(User user) {
+        return userJpaRepository.saveWithoutVersion(user.getId(), user.getBalance(), user.getUuid());
+    }
 }

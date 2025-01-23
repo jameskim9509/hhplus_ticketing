@@ -9,7 +9,8 @@ CREATE TABLE IF NOT EXISTS seat (
   `concert_id` int,
   `number` int,
   `cost` int,
-  `status` varchar(255)
+  `status` varchar(255),
+  `version` int not null default 0
 );
 
 CREATE TABLE IF NOT EXISTS waiting_queue (
@@ -28,7 +29,8 @@ CREATE TABLE IF NOT EXISTS reservation (
   `seat_number` int,
   `seat_cost` int,
   `status` varchar(255),
-  `expired_at` datetime
+  `expired_at` datetime,
+  `version` int not null default 0
 );
 
 CREATE TABLE IF NOT EXISTS payment (
@@ -42,5 +44,6 @@ CREATE TABLE IF NOT EXISTS payment (
 CREATE TABLE IF NOT EXISTS user (
   `user_id` int AUTO_INCREMENT PRIMARY KEY,
   `balance` int,
-  `uuid` varchar(255)
+  `uuid` varchar(255),
+  `version` int not null default 0
 );

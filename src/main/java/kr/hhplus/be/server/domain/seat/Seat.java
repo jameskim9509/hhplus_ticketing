@@ -29,4 +29,7 @@ public class Seat {
     @Setter
     @Enumerated(EnumType.STRING)
     private SeatStatus status;
+
+    @Version
+    private int version;
 }

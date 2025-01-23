@@ -21,9 +21,11 @@ public class UserApplication implements UserUsecase {
     public User chargePoint(Long point)
     {
         User user = UserContext.getContext();
-        userReader.readByIdWithLock(user.getId());
+        userReader.readByIdWithPessimisticLock(user.getId());
         user.chargePoint(point);
-        return userModifier.modifyUser(user);
+        // 비관적 락의 경우, update 쿼리시에 version 검증이 나가는 것을 방지
+        userModifier.modifyUserWithoutVersion(user);
+        return user;
     }
 
     @Transactional

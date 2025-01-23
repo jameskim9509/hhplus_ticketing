@@ -18,9 +18,15 @@ public class UserReader {
                 .orElseThrow(() -> new ConcertException(ErrorCode.USER_NOT_FOUND));
     }
 
-    public User readByIdWithLock(Long userId)
+    public User readByIdWithOptimisticLock(Long userId)
     {
-        return userReaderRepository.readByIdWithLock(userId)
+        return userReaderRepository.readByIdWithOptimisticLock(userId)
+                .orElseThrow(() -> new ConcertException(ErrorCode.USER_NOT_FOUND));
+    }
+
+    public User readByIdWithPessimisticLock(Long userId)
+    {
+        return userReaderRepository.readByIdWithPessimisticLock(userId)
                 .orElseThrow(() -> new ConcertException(ErrorCode.USER_NOT_FOUND));
     }
 

@@ -37,7 +37,7 @@ public class TokenApplication implements TokenUsecase{
     @Transactional
     public WaitingQueue createToken(Long userId)
     {
-        User user = userReader.readByIdWithLock(userId);
+        User user = userReader.readByIdWithOptimisticLock(userId);
         String uuid = user.getUuid();
         if (Objects.isNull(uuid)) {
             uuid = UUID.randomUUID().toString();

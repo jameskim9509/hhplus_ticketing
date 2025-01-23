@@ -10,23 +10,25 @@ import kr.hhplus.be.server.infrastructure.core.user.UserJpaRepository;
 import kr.hhplus.be.server.infrastructure.core.waiting_queue.WaitingQueueJpaRepository;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
+import org.testcontainers.shaded.org.apache.commons.lang3.time.StopWatch;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 
 
 @ActiveProfiles("test")
 @SpringBootTest
 class TokenApplicationIntegrationTest {
+    Logger logger = LoggerFactory.getLogger(this.getClass());
+
     @Autowired
     private UserJpaRepository userJpaRepository;
 
@@ -59,7 +61,7 @@ class TokenApplicationIntegrationTest {
     }
 
     @Test
-    void 동시에_3번_토큰_생성시_2번_오류()
+    void 동시에_30번_토큰_생성시_29번_오류()
     {
         // given
         User user = userJpaRepository.save(
@@ -70,14 +72,24 @@ class TokenApplicationIntegrationTest {
 
         // when, then
         List<CompletableFuture<Boolean>> futures = new ArrayList<>();
-        for(int i = 0; i < 3; i++) {
+        for(int i = 0; i < 30; i++) {
             futures.add(CompletableFuture.supplyAsync(
                     () -> {
+                        StopWatch timer = new StopWatch();
+                        timer.start();
                         try {
                             tokenApplication.createToken(user.getId());
+
+                            timer.stop();
+                            logger.info(
+                                    "정상 메소드 실행 시간: {}ms", timer.getTime(TimeUnit.MILLISECONDS)
+                            );
                             return true;
                         } catch (RuntimeException re) {
-                            System.out.println(re.getMessage());
+                            timer.stop();
+                            logger.info(
+                                    "비정상 메소드 실행 시간: {}ms", timer.getTime(TimeUnit.MILLISECONDS)
+                            );
                             return false;
                         }
                     }
@@ -85,6 +97,9 @@ class TokenApplicationIntegrationTest {
         }
 
         CompletableFuture[] futuresArray = futures.toArray(new CompletableFuture[futures.size()]);
+
+        StopWatch stopWatch = new StopWatch();
+        stopWatch.start();
 
         CompletableFuture.allOf(futuresArray)
                 .thenRun(() ->
@@ -99,8 +114,11 @@ class TokenApplicationIntegrationTest {
                             })
                             .count();
 
-                    Assertions.assertThat(success_count).isEqualTo(2L);
+                    Assertions.assertThat(success_count).isEqualTo(29L);
                 }).join();
+
+        stopWatch.stop();
+        logger.info("총 소요시간: {}ms", stopWatch.getTime(TimeUnit.MILLISECONDS));
     }
 
     @Test

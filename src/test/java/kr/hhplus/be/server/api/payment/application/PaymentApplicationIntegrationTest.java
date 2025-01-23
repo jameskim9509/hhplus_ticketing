@@ -13,21 +13,27 @@ import kr.hhplus.be.server.infrastructure.core.user.UserJpaRepository;
 import kr.hhplus.be.server.infrastructure.core.waiting_queue.WaitingQueueJpaRepository;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
+import org.testcontainers.shaded.org.apache.commons.lang3.time.StopWatch;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 
 @ActiveProfiles("test")
 @SpringBootTest
 class PaymentApplicationIntegrationTest {
+    Logger logger = LoggerFactory.getLogger(this.getClass());
+
     @Autowired
     UserJpaRepository userJpaRepository;
     @Autowired
@@ -81,7 +87,7 @@ class PaymentApplicationIntegrationTest {
     }
 
     @Test
-    void 동시에_3번_결제하면_2번_오류()
+    void 동시에_30번_결제하면_29번_오류()
     {
         // given
         User user = userJpaRepository.save(
@@ -112,17 +118,29 @@ class PaymentApplicationIntegrationTest {
 
         // when
         List<CompletableFuture<Boolean>> futures = new ArrayList<>();
-        for(int i = 0; i < 3; i++) {
+        for(int i = 0; i < 30; i++) {
             futures.add(CompletableFuture.supplyAsync(
                     () -> {
+                        StopWatch timer = new StopWatch();
+                        timer.start();
+
                         try {
                             UserContext.setContext(user);
 
                             paymentApplication.pay(
                                     reservation.getId()
                             );
+
+                            timer.stop();
+                            logger.info(
+                                    "정상 메소드 실행 시간: {}ms", timer.getTime(TimeUnit.MILLISECONDS)
+                            );
                             return true;
                         } catch (RuntimeException re) {
+                            timer.stop();
+                            logger.info(
+                                    "비정상 메소드 실행 시간: {}ms", timer.getTime(TimeUnit.MILLISECONDS)
+                            );
                             return false;
                         }
                     }
@@ -130,6 +148,9 @@ class PaymentApplicationIntegrationTest {
         }
 
         CompletableFuture[] futuresArray = futures.toArray(new CompletableFuture[futures.size()]);
+
+        StopWatch stopWatch = new StopWatch();
+        stopWatch.start();
 
         CompletableFuture.allOf(futuresArray)
                 .thenRun(() ->
@@ -144,7 +165,10 @@ class PaymentApplicationIntegrationTest {
                             })
                             .count();
 
-                    Assertions.assertThat(success_count).isEqualTo(2L);
+                    Assertions.assertThat(success_count).isEqualTo(29L);
                 }).join();
+
+        stopWatch.stop();
+        logger.info("총 소요시간: {}ms", stopWatch.getTime(TimeUnit.MILLISECONDS));
     }
 }

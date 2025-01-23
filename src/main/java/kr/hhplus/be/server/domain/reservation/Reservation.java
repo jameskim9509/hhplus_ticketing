@@ -49,6 +49,9 @@ public class Reservation {
 
     private LocalDateTime expiredAt;
 
+    @Version
+    private int version;
+
     public void setConcert(Concert concert)
     {
         this.concert = concert;

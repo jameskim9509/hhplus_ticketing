@@ -39,7 +39,7 @@ class UserReaderRepositoryImplTest {
 
         // when, then
         Assertions.assertThat(
-                userReaderRepository.readByIdWithLock(user.getId())
+                userReaderRepository.readByIdWithOptimisticLock(user.getId())
         ).isNotEmpty();
     }
 

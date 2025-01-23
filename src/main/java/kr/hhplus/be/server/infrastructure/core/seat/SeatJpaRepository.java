@@ -13,7 +13,8 @@ import java.util.Optional;
 public interface SeatJpaRepository extends JpaRepository<Seat, Long> {
     List<Seat> findAllByConcertId(Long concertId);
 
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
+//    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Lock(LockModeType.OPTIMISTIC)
     @Query("select s from Seat s where s.concert.id=:concertId and s.number=:seatNumber")
     Optional<Seat> findByConcertIdAndNumberWithLock(@Param("concertId") Long concertId, @Param("seatNumber") Long seatNumber);
 }

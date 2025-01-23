@@ -1,7 +1,9 @@
 package kr.hhplus.be.server.domain.user;
 
 import jakarta.persistence.*;
-import kr.hhplus.be.server.domain.waiting_queue.WaitingQueue;
+import kr.hhplus.be.server.common.exception.ConcertException;
+import kr.hhplus.be.server.common.exception.ErrorCode;
+import kr.hhplus.be.server.domain.token.WaitingQueue;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -34,14 +36,14 @@ public class User {
     public void chargePoint(Long chargePoint)
     {
         if (MAX_POINT < this.balance + chargePoint)
-            throw new RuntimeException("충전 가능 금액을 초과하였습니다.");
+            throw new ConcertException(ErrorCode.CHARGE_POINT_MAX);
         this.balance += chargePoint;
     }
 
     public void usePoint(Long usePoint)
     {
         if (this.balance < usePoint)
-            throw new RuntimeException("잔액이 부족합니다.");
+            throw new ConcertException(ErrorCode.NOT_ENOUGH_BALANCE);
         this.balance -= usePoint;
     }
 }

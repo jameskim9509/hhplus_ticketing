@@ -1,5 +1,7 @@
 package kr.hhplus.be.server.domain.seat.components;
 
+import kr.hhplus.be.server.common.exception.ConcertException;
+import kr.hhplus.be.server.common.exception.ErrorCode;
 import kr.hhplus.be.server.domain.concert.Concert;
 import kr.hhplus.be.server.domain.seat.Seat;
 import kr.hhplus.be.server.domain.seat.repositories.SeatReaderRepository;
@@ -19,7 +21,7 @@ public class SeatReader {
         List<Seat> seatList = concert.getSeatList().stream()
                 .filter(s -> s.getStatus() == SeatStatus.AVAILABLE).toList();
         if (seatList.isEmpty())
-            throw new RuntimeException("이용가능한 좌석이 없습니다.");
+            throw new ConcertException(ErrorCode.AVAILABLE_SEAT_NOT_FOUND);
 
         return seatList;
     }
@@ -27,9 +29,9 @@ public class SeatReader {
     public Seat readAvailableSeatByConcertIdAndNumberWithLock(Long concertId, Long seatNumber)
     {
         Seat seat =  seatReaderRepository.getSeatByConcertIdAndNumberWithLock(concertId, seatNumber)
-                .orElseThrow(() -> new RuntimeException("없는 좌석입니다."));
+                .orElseThrow(() -> new ConcertException(ErrorCode.SEAT_NOT_FOUND));
         if (seat.getStatus() != SeatStatus.AVAILABLE)
-            throw new RuntimeException("사용 가능한 좌석이 아닙니다.");
+            throw new ConcertException(ErrorCode.SEAT_IS_INVALID);
 
         return seat;
     }
@@ -37,6 +39,6 @@ public class SeatReader {
     public Seat getById(Long seatId)
     {
         return seatReaderRepository.getById(seatId)
-                .orElseThrow(() -> new RuntimeException("존재하지 않는 좌석입니다."));
+                .orElseThrow(() -> new ConcertException(ErrorCode.SEAT_NOT_FOUND));
     }
 }

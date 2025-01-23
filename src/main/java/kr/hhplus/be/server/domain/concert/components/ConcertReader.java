@@ -1,5 +1,7 @@
 package kr.hhplus.be.server.domain.concert.components;
 
+import kr.hhplus.be.server.common.exception.ConcertException;
+import kr.hhplus.be.server.common.exception.ErrorCode;
 import kr.hhplus.be.server.domain.concert.Concert;
 import kr.hhplus.be.server.domain.concert.repositories.ConcertReaderRepository;
 import lombok.RequiredArgsConstructor;
@@ -16,13 +18,13 @@ public class ConcertReader {
     public Concert getByDate(LocalDate date)
     {
         return concertReaderRepository.getByDate(date)
-                .orElseThrow(() -> new RuntimeException("존재하지 않는 콘서트입니다."));
+                .orElseThrow(() -> new ConcertException(ErrorCode.CONCERT_NOT_FOUND));
     }
 
     public Concert getById(Long id)
     {
         return concertReaderRepository.getById(id)
-                .orElseThrow(() -> new RuntimeException("존재하지 않는 콘서트입니다."));
+                .orElseThrow(() -> new ConcertException(ErrorCode.CONCERT_NOT_FOUND));
     }
 
     public List<Concert> readByDateBetween(LocalDate startDate, LocalDate endDate){

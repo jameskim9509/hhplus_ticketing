@@ -78,7 +78,7 @@ class SeatReaderTest {
         Assertions.assertThatThrownBy(
                 () -> seatReader.readAvailableSeatByConcertIdAndNumberWithLock(1L, 100L)
         ).isInstanceOf(RuntimeException.class)
-        .hasMessage("없는 좌석입니다.");
+        .hasMessage("존재하지 않는 좌석입니다.");
     }
 
     @Test

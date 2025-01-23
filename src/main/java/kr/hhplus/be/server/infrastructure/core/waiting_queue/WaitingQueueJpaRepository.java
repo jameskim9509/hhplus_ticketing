@@ -1,8 +1,8 @@
 package kr.hhplus.be.server.infrastructure.core.waiting_queue;
 
 import jakarta.persistence.LockModeType;
-import kr.hhplus.be.server.domain.waiting_queue.WaitingQueue;
-import kr.hhplus.be.server.domain.waiting_queue.type.WaitingQueueStatus;
+import kr.hhplus.be.server.domain.token.WaitingQueue;
+import kr.hhplus.be.server.domain.token.type.WaitingQueueStatus;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;

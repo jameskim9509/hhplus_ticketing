@@ -1,7 +1,7 @@
 package kr.hhplus.be.server.infrastructure.core.waiting_queue;
 
-import kr.hhplus.be.server.domain.waiting_queue.WaitingQueue;
-import kr.hhplus.be.server.domain.waiting_queue.type.WaitingQueueStatus;
+import kr.hhplus.be.server.domain.token.WaitingQueue;
+import kr.hhplus.be.server.domain.token.type.WaitingQueueStatus;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -21,4 +21,19 @@ public class WaitingQueueModifier {
     {
         waitingQueueModifierRepository.deleteAllTokens(tokenList);
     }
+
+    public List<String> deleteWaitTokens(long count)
+    {
+        return waitingQueueModifierRepository.deleteWaitTokens(count);
+    }
+
+    public void deleteAllExpiredTokens(double nanoSeconds)
+    {
+        waitingQueueModifierRepository.deleteAllExpiredTokens(nanoSeconds);
+    }
+
+    public void changeExpiredTime(String uuid, double expiredAt)
+    {
+        waitingQueueModifierRepository.changeExpiredTime(uuid, expiredAt);
+    }
 }

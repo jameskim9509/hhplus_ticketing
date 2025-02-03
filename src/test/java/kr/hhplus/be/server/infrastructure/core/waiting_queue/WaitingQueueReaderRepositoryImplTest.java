@@ -4,15 +4,22 @@ import kr.hhplus.be.server.domain.user.User;
 import kr.hhplus.be.server.domain.token.WaitingQueue;
 import kr.hhplus.be.server.domain.token.type.WaitingQueueStatus;
 import kr.hhplus.be.server.infrastructure.core.user.UserJpaRepository;
+import kr.hhplus.be.server.infrastructure.redis.TokenRedisRepository;
 import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
+
+import static kr.hhplus.be.server.infrastructure.redis.TokenRedisRepository.ACTIVE_TOKEN_SET_NAME;
+import static kr.hhplus.be.server.infrastructure.redis.TokenRedisRepository.WAIT_TOKEN_SET_NAME;
 
 @ActiveProfiles("test")
 @SpringBootTest
@@ -24,6 +31,19 @@ class WaitingQueueReaderRepositoryImplTest {
     private WaitingQueueJpaRepository waitingQueueJpaRepository;
     @Autowired
     private UserJpaRepository userJpaRepository;
+    @Autowired
+    private TokenRedisRepository tokenRedisRepository;
+
+    @AfterEach
+    void clearRedisDB()
+    {
+        tokenRedisRepository.zSetRemoveRangeByScore(
+                ACTIVE_TOKEN_SET_NAME, Double.MIN_VALUE, Double.MAX_VALUE
+        );
+        tokenRedisRepository.zSetRemoveRangeByScore(
+                WAIT_TOKEN_SET_NAME, Double.MIN_VALUE, Double.MAX_VALUE
+        );
+    }
 
     @Transactional
     @Test
@@ -141,5 +161,56 @@ class WaitingQueueReaderRepositoryImplTest {
         Assertions.assertThat(
                 waitingQueueReaderRepository.readActiveTokenLimitBy(PageRequest.of(0, 1))
         ).isNotEmpty();
+    }
+
+    @Test
+    void getWaitingToken() {
+        // given
+        tokenRedisRepository.zSetAdd(WAIT_TOKEN_SET_NAME, "1234", 1);
+
+        // when
+        double score = waitingQueueReaderRepository.getWaitingToken("1234").get();
+
+
+    }
+
+    @Test
+    void getActiveToken() {
+        // given
+        tokenRedisRepository.zSetAdd(ACTIVE_TOKEN_SET_NAME, "1234", 1);
+
+        // when
+        double score = waitingQueueReaderRepository.getActiveToken("1234").get();
+
+        // then
+        Assertions.assertThat(score).isEqualTo(1);
+    }
+
+    @Test
+    void getWaitingNumber() {
+        // given
+        tokenRedisRepository.zSetAdd(WAIT_TOKEN_SET_NAME, "1234", 3);
+        tokenRedisRepository.zSetAdd(WAIT_TOKEN_SET_NAME, "2345", 5);
+        tokenRedisRepository.zSetAdd(WAIT_TOKEN_SET_NAME, "3456", 4);
+
+        // when
+        Long waitingNumber = waitingQueueReaderRepository.getWaitingNumber("1234").get();
+
+        // then
+        Assertions.assertThat(waitingNumber).isEqualTo(0L);
+    }
+
+    @Test
+    void getActiveTokensCount() {
+        // given
+        tokenRedisRepository.zSetAdd(ACTIVE_TOKEN_SET_NAME, "1234", 3);
+        tokenRedisRepository.zSetAdd(ACTIVE_TOKEN_SET_NAME, "2345", 4);
+        tokenRedisRepository.zSetAdd(WAIT_TOKEN_SET_NAME, "3456", 5);
+
+        // when
+        Long tokenCount = waitingQueueReaderRepository.getActiveTokensCount();
+
+        // then
+        Assertions.assertThat(tokenCount).isEqualTo(2L);
     }
 }

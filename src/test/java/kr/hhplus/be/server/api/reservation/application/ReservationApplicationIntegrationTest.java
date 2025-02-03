@@ -7,6 +7,7 @@ import kr.hhplus.be.server.domain.reservation.type.ReservationStatus;
 import kr.hhplus.be.server.domain.seat.type.SeatStatus;
 import kr.hhplus.be.server.domain.token.WaitingQueue;
 import kr.hhplus.be.server.domain.token.components.WaitingQueueReader;
+import kr.hhplus.be.server.domain.token.components.WaitingQueueWriter;
 import kr.hhplus.be.server.domain.token.type.WaitingQueueStatus;
 import kr.hhplus.be.server.domain.user.User;
 import kr.hhplus.be.server.infrastructure.core.user.UserJpaRepository;
@@ -41,6 +42,8 @@ class ReservationApplicationIntegrationTest {
 
     @Autowired
     private WaitingQueueReader waitingQueueReader;
+    @Autowired
+    private WaitingQueueWriter waitingQueueWriter;
 
     @Autowired
     private ReservationApplication reservationApplication;
@@ -59,12 +62,7 @@ class ReservationApplicationIntegrationTest {
         );
         userJpaRepository.flush();
 
-        WaitingQueue token = WaitingQueue.builder()
-                .status(WaitingQueueStatus.ACTIVE)
-                .build();
-        token.setUser(user);
-        waitingQueueJpaRepository.save(token);
-        waitingQueueJpaRepository.flush();
+        waitingQueueWriter.writeActiveToken(user.getUuid(),1234 );
 
         UserContext.setContext(user);
 
@@ -90,12 +88,7 @@ class ReservationApplicationIntegrationTest {
         );
         userJpaRepository.flush();
 
-        WaitingQueue token = WaitingQueue.builder()
-                .status(WaitingQueueStatus.ACTIVE)
-                .build();
-        token.setUser(user);
-        waitingQueueJpaRepository.save(token);
-        waitingQueueJpaRepository.flush();
+        waitingQueueWriter.writeActiveToken(user.getUuid(),1234 );
 
         // when
         List<CompletableFuture<Boolean>> futures = new ArrayList<>();

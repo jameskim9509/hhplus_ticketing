@@ -5,6 +5,6 @@ import kr.hhplus.be.server.api.token.dto.GetTokenResponse;
 import kr.hhplus.be.server.domain.token.WaitingQueue;
 
 public interface TokenUsecase {
-    public WaitingQueue createToken(Long userId);
+    public String createToken(Long userId);
     public Long getToken();
 }

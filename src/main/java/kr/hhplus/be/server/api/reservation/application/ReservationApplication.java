@@ -1,5 +1,6 @@
 package kr.hhplus.be.server.api.reservation.application;
 
+import kr.hhplus.be.server.api.token.application.TokenApplication;
 import kr.hhplus.be.server.common.Interceptor.UserContext;
 import kr.hhplus.be.server.common.exception.ConcertException;
 import kr.hhplus.be.server.common.exception.ErrorCode;
@@ -26,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 
 @Service
 @RequiredArgsConstructor
@@ -39,6 +41,8 @@ public class ReservationApplication implements ReservationUsecase{
     private final ReservationWriter reservationWriter;
     private final SeatModifier seatModifier;
     private final WaitingQueueModifier waitingQueueModifier;
+
+    private static final Long RESERVATION_LIFETIME_IN_MINUTES = 5L;
 
     @Override
     @Transactional
@@ -57,7 +61,6 @@ public class ReservationApplication implements ReservationUsecase{
     public Reservation reserveSeat(LocalDate date, Long seatNumber)
     {
         User user = UserContext.getContext();
-        WaitingQueue token = waitingQueueReader.readValidToken(user);
 
         Concert concert = concertReader.getByDate(date);
         // lock을 걸어 가져와야 하기 때문에 concert.getSeatList() (x)
@@ -65,7 +68,7 @@ public class ReservationApplication implements ReservationUsecase{
 
         seat.setStatus(SeatStatus.RESERVED);
 
-        LocalDateTime expiredTime = LocalDateTime.now().plusMinutes(5);
+        LocalDateTime expiredTime = LocalDateTime.now().plusMinutes(RESERVATION_LIFETIME_IN_MINUTES);
         Reservation reservation = Reservation.builder()
                 .expiredAt(expiredTime)
                 .status(ReservationStatus.PAYMENT_REQUIRED)
@@ -74,19 +77,16 @@ public class ReservationApplication implements ReservationUsecase{
         reservation.setConcert(concert);
         reservation.setSeat(seat);
 
-        // 기존 토큰을 만료하고, 만료시간이 추가된 새 토큰을 생성하여 lock 사용 x
-        token.expire(LocalDateTime.now());
-        waitingQueueWriter.writeToken(
-                WaitingQueue.builder()
-                        .user(user)
-                        .status(WaitingQueueStatus.ACTIVE)
-                        .expiredAt(expiredTime)
-                        .build()
-        );
-
         reservationWriter.writeReservation(reservation);
         seatModifier.modifySeat(seat);
-        waitingQueueModifier.modifyToken(token);
+
+        // 레디스 명령어를 제일 마지막에 수행함으로써 레디스 트랜잭션 사용 X
+        // 토큰 값 덮어쓰기
+        // 스케줄러가 만료시간이 다 되어 토큰을 지워버렸다하더라도, 새로운 토큰을 생성해서 집어넣는다.
+        waitingQueueModifier.changeExpiredTime(
+                user.getUuid(),
+                expiredTime.toEpochSecond(ZoneOffset.UTC) * 1_000_000_000 + expiredTime.getNano()
+        );
 
         return reservation;
     }

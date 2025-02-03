@@ -57,12 +57,6 @@ class PaymentApplicationUnitTest {
         );
 
         Mockito.doReturn(
-                WaitingQueue.builder()
-                        .status(WaitingQueueStatus.ACTIVE)
-                        .build()
-        ).when(waitingQueueReader).readValidToken(Mockito.any());
-
-        Mockito.doReturn(
                 Reservation.builder()
                         .seatCost(6000L)
                         .expiredAt(LocalDateTime.now().plusMinutes(1))
@@ -71,23 +65,23 @@ class PaymentApplicationUnitTest {
                         .build()
         ).when(reservationReader).readByIdWithLock(Mockito.anyLong());
 
-        ArgumentCaptor<WaitingQueue> tokenCaptor = ArgumentCaptor.forClass(WaitingQueue.class);
+        ArgumentCaptor<String> tokenCaptor = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<Reservation> reservationCaptor = ArgumentCaptor.forClass(Reservation.class);
         ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
 
         // when
         paymentApplication.pay(1L);
 
-        Mockito.verify(waitingQueueModifier).modifyToken(tokenCaptor.capture());
+        Mockito.verify(waitingQueueModifier).changeExpiredTime(tokenCaptor.capture(), Mockito.anyDouble());
         Mockito.verify(userModifier).modifyUser(userCaptor.capture());
         Mockito.verify(reservationModifier).modifyReservation(reservationCaptor.capture());
 
-        WaitingQueue capturedToken = tokenCaptor.getValue();
+        String capturedToken = tokenCaptor.getValue();
         User capturedUser = userCaptor.getValue();
         Reservation capturedReservation = reservationCaptor.getValue();
 
         // then
-        Assertions.assertThat(capturedToken.getStatus()).isEqualTo(WaitingQueueStatus.EXPIRED);
+        Assertions.assertThat(capturedToken).isNotNull();
         Assertions.assertThat(capturedUser.getBalance()).isEqualTo(4000L);
         Assertions.assertThat(capturedReservation.getStatus()).isEqualTo(ReservationStatus.RESERVED);
     }
@@ -104,11 +98,6 @@ class PaymentApplicationUnitTest {
                         .build()
         );
 
-        Mockito.doReturn(
-                WaitingQueue.builder()
-                        .status(WaitingQueueStatus.ACTIVE)
-                        .build()
-        ).when(waitingQueueReader).readValidToken(Mockito.any());
         Mockito.doReturn(
                 Reservation.builder()
                         .expiredAt(LocalDateTime.now().minusMinutes(1))
@@ -137,11 +126,6 @@ class PaymentApplicationUnitTest {
         );
 
         Mockito.doReturn(
-                WaitingQueue.builder()
-                        .status(WaitingQueueStatus.ACTIVE)
-                        .build()
-        ).when(waitingQueueReader).readValidToken(Mockito.any());
-        Mockito.doReturn(
                 Reservation.builder()
                         .expiredAt(LocalDateTime.now().plusMinutes(5))
                         .status(ReservationStatus.RESERVED)
@@ -168,12 +152,6 @@ class PaymentApplicationUnitTest {
                         .balance(10000L)
                         .build()
         );
-
-        Mockito.doReturn(
-                WaitingQueue.builder()
-                        .status(WaitingQueueStatus.ACTIVE)
-                        .build()
-        ).when(waitingQueueReader).readValidToken(Mockito.any());
 
         Mockito.doReturn(
                 Reservation.builder()

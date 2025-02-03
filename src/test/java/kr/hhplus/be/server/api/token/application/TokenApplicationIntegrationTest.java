@@ -4,6 +4,7 @@ import kr.hhplus.be.server.api.token.dto.CreateTokenResponse;
 import kr.hhplus.be.server.api.token.dto.GetTokenResponse;
 import kr.hhplus.be.server.common.Interceptor.UserContext;
 import kr.hhplus.be.server.domain.token.WaitingQueue;
+import kr.hhplus.be.server.domain.token.components.WaitingQueueReader;
 import kr.hhplus.be.server.domain.token.type.WaitingQueueStatus;
 import kr.hhplus.be.server.domain.user.User;
 import kr.hhplus.be.server.infrastructure.core.user.UserJpaRepository;
@@ -36,7 +37,7 @@ class TokenApplicationIntegrationTest {
     private TokenApplication tokenApplication;
 
     @Autowired
-    private WaitingQueueJpaRepository waitingQueueJpaRepository;
+    private WaitingQueueReader waitingQueueReader;
 
     @Transactional
     @Test
@@ -51,8 +52,7 @@ class TokenApplicationIntegrationTest {
         UserContext.setContext(user);
 
         // when
-        WaitingQueue waitingQueue = tokenApplication.createToken(user.getId());
-        String uuid = waitingQueue.getUser().getUuid();
+        tokenApplication.createToken(user.getId());
 
         Long waitingNumber = tokenApplication.getToken();
 
@@ -156,9 +156,11 @@ class TokenApplicationIntegrationTest {
         latch.await();
         excecutorService.shutdown();
 
+        tokenApplication.updateWaitingQueue();
+
         //then
         Assertions.assertThat(
-                waitingQueueJpaRepository.findAllByStatus(WaitingQueueStatus.ACTIVE).size()
-        ).isEqualTo(10);
+                waitingQueueReader.getActiveTokensCount()
+        ).isEqualTo(10L);
     }
 }

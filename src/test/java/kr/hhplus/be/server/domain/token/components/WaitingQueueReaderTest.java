@@ -1,5 +1,7 @@
 package kr.hhplus.be.server.domain.token.components;
 
+import kr.hhplus.be.server.common.exception.ConcertException;
+import kr.hhplus.be.server.common.exception.ErrorCode;
 import kr.hhplus.be.server.domain.user.User;
 import kr.hhplus.be.server.domain.token.WaitingQueue;
 import kr.hhplus.be.server.domain.token.repositories.WaitingQueueReaderRepository;
@@ -64,21 +66,16 @@ class WaitingQueueReaderTest {
     }
 
     @Test
-    void isValidTokenExists() {
+    void getWaitingNumber()
+    {
         // given
-        User user = User.builder()
-                .waitingQueueList(
-                        List.of(
-                                WaitingQueue.builder().status(WaitingQueueStatus.EXPIRED).build(),
-                                WaitingQueue.builder().status(WaitingQueueStatus.EXPIRED).build(),
-                                WaitingQueue.builder().status(WaitingQueueStatus.EXPIRED).build()
-                        )
-                ).build();
-        // when
-        boolean isValidTokenExists = waitingQueueReader.isValidTokenExists(user);
+        Mockito.doReturn(Optional.of(1234))
+                .when(waitingQueueReaderRepository).getActiveToken(Mockito.any());
 
-        // then
-        Assertions.assertThat(isValidTokenExists).isFalse();
+        // when, then
+        Assertions.assertThat(
+                waitingQueueReader.getWaitingNumber("1234")
+        ).isEqualTo(0L);
     }
 
     @Test
@@ -133,5 +130,20 @@ class WaitingQueueReaderTest {
                 () -> waitingQueueReader.readActiveTokenWithMaxId()
         ).isInstanceOf(RuntimeException.class)
         .hasMessage("활성화된 토큰이 없습니다.");
+    }
+
+    @Test
+    void 토큰이_없는데_조회하면_에러()
+    {
+        // given
+        Mockito.doReturn(Optional.empty())
+                .when(waitingQueueReaderRepository).getActiveToken(Mockito.any());
+        Mockito.doReturn(Optional.empty())
+                .when(waitingQueueReaderRepository).getWaitingNumber(Mockito.any());
+
+        // when, then
+        Assertions.assertThatThrownBy(
+                () -> waitingQueueReader.getWaitingNumber("1234")
+        ).isInstanceOf(RuntimeException.class).hasMessage(ErrorCode.TOKEN_NOT_FOUND.getMessage());
     }
 }

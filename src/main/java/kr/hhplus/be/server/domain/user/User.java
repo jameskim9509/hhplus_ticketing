@@ -4,10 +4,7 @@ import jakarta.persistence.*;
 import kr.hhplus.be.server.common.exception.ConcertException;
 import kr.hhplus.be.server.common.exception.ErrorCode;
 import kr.hhplus.be.server.domain.token.WaitingQueue;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,6 +24,7 @@ public class User {
     private Long id;
 
     private Long balance;
+    @Setter
     private String uuid;
 
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)

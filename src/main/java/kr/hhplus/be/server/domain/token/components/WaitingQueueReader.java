@@ -60,9 +60,27 @@ public class WaitingQueueReader {
         return waitingQueueReaderRepository.readActiveTokenLimitBy(PageRequest.of(0, 1)).orElseThrow(() -> new ConcertException(ErrorCode.ACTIVE_TOKEN_NOT_FOUND));
     }
 
-    public boolean isValidTokenExists(User user)
+    public boolean isWaitingTokenExists(String uuid)
     {
-        return user.getWaitingQueueList().stream()
-                .anyMatch(t -> t.getStatus() != WaitingQueueStatus.EXPIRED);
+        return waitingQueueReaderRepository.getWaitingToken(uuid).isPresent();
+    }
+
+    public boolean isActiveTokenExists(String uuid)
+    {
+        return waitingQueueReaderRepository.getActiveToken(uuid).isPresent();
+    }
+
+    public long getWaitingNumber(String uuid)
+    {
+        if(waitingQueueReaderRepository.getActiveToken(uuid).isPresent())
+            return 0L;
+
+        return waitingQueueReaderRepository.getWaitingNumber(uuid)
+                .orElseThrow(() -> new ConcertException(ErrorCode.TOKEN_NOT_FOUND));
+    }
+
+    public long getActiveTokensCount()
+    {
+        return waitingQueueReaderRepository.getActiveTokensCount();
     }
 }

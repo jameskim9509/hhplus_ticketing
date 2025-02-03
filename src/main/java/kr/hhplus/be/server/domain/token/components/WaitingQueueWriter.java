@@ -14,4 +14,14 @@ public class WaitingQueueWriter {
     {
         return waitingQueueWriterRepository.writeToken(waitingQueue);
     }
+
+    public boolean writeWaitingToken(String uuid, double createdAt)
+    {
+        return waitingQueueWriterRepository.writeWaitingToken(uuid, createdAt);
+    }
+
+    public boolean writeActiveToken(String uuid, double expiredAt)
+    {
+        return waitingQueueWriterRepository.writeActiveToken(uuid, expiredAt);
+    }
 }

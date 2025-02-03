@@ -60,15 +60,8 @@ class ReservationApplicationUnitTest {
                 User.builder().uuid(UUID.randomUUID().toString()).build()
         );
 
-        Mockito.doReturn(
-                WaitingQueue.builder()
-                        .status(WaitingQueueStatus.ACTIVE)
-                        .build()
-        ).when(waitingQueueReader).readValidToken(Mockito.any());
-
         Mockito.doReturn(Concert.builder().id(1L).build())
                 .when(concertReader).getByDate(Mockito.any());
-
         Mockito.doReturn(
                 Seat.builder()
                         .status(SeatStatus.AVAILABLE)
@@ -77,24 +70,23 @@ class ReservationApplicationUnitTest {
 
         ArgumentCaptor<Reservation> reservationCaptor = ArgumentCaptor.forClass(Reservation.class);
         ArgumentCaptor<Seat> seatCaptor = ArgumentCaptor.forClass(Seat.class);
-        ArgumentCaptor<WaitingQueue> tokenCaptor = ArgumentCaptor.forClass(WaitingQueue.class);
+        ArgumentCaptor<String> tokenCaptor = ArgumentCaptor.forClass(String.class);
 
         // when
         reservationApplication.reserveSeat(LocalDate.now(), 10L);
         Mockito.verify(reservationWriter).writeReservation(reservationCaptor.capture());
         Mockito.verify(seatModifier).modifySeat(seatCaptor.capture());
-        Mockito.verify(waitingQueueModifier).modifyToken(tokenCaptor.capture());
+        Mockito.verify(waitingQueueModifier).changeExpiredTime(tokenCaptor.capture(), Mockito.anyDouble());
 
         Reservation capturedReservation = reservationCaptor.getValue();
         Seat capturedSeat = seatCaptor.getValue();
-        WaitingQueue capturedToken = tokenCaptor.getValue();
-
+        String capturedToken = tokenCaptor.getValue();
         // then
         Assertions.assertThat(capturedReservation.getConcert()).isNotNull();
         Assertions.assertThat(capturedReservation.getUser()).isNotNull();
         Assertions.assertThat(capturedReservation.getSeat()).isNotNull();
         Assertions.assertThat(capturedSeat.getStatus()).isEqualTo(SeatStatus.RESERVED);
-        Assertions.assertThat(capturedToken.getExpiredAt()).isNotNull();
+        Assertions.assertThat(capturedToken).isNotNull();
     }
 
     @Test

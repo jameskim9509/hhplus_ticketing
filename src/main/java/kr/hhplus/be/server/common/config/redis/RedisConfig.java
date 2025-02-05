@@ -61,4 +61,16 @@ public class RedisConfig {
                 .cacheDefaults(configuration)
                 .build();
     }
+
+    @Bean
+    public RedissonClient redissonClient()
+    {
+        RedissonClient redissonClient = null;
+        Config config = new Config();
+        config.useSingleServer().setAddress(
+                String.format("redis://%s:%s", host, String.valueOf(port))
+        );
+        redissonClient = Redisson.create(config);
+        return redissonClient;
+    }
 }

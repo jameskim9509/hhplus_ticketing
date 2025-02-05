@@ -1,22 +1,19 @@
 package kr.hhplus.be.server.api.concert.application;
 
-import kr.hhplus.be.server.api.concert.dto.GetAvailableConcertsResponse;
-import kr.hhplus.be.server.common.Interceptor.UserContext;
-import kr.hhplus.be.server.domain.concert.Concert;
-import kr.hhplus.be.server.domain.token.WaitingQueue;
-import kr.hhplus.be.server.domain.token.type.WaitingQueueStatus;
-import kr.hhplus.be.server.domain.user.User;
+import kr.hhplus.be.server.api.concert.dto.AvailableConcertDtoList;
+import kr.hhplus.be.server.domain.concert.components.ConcertReader;
 import kr.hhplus.be.server.infrastructure.core.user.UserJpaRepository;
 import kr.hhplus.be.server.infrastructure.core.waiting_queue.WaitingQueueJpaRepository;
 import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 import java.time.LocalDate;
-import java.util.List;
 
 
 @ActiveProfiles("test")
@@ -27,36 +24,44 @@ class ConcertApplicationIntegrationTest {
     @Autowired
     private WaitingQueueJpaRepository waitingQueueJpaRepository;
 
+    @MockitoSpyBean
+    private ConcertReader concertReader;
+
     @Autowired
     private ConcertApplication concertApplication;
 
-    @Transactional
+    @AfterEach
+    void clearCache()
+    {
+        concertApplication.clearAvailableConcerts();
+    }
+
+    @Test
+    void 이용가능한_콘서트_조회_캐싱_테스트_성공()
+    {
+        // when
+        for(int i = 0; i < 3; i++ )
+        {
+            concertApplication.getAvailableConcerts(
+                    LocalDate.of(2025,7, 1),
+                    LocalDate.of(2025,8 ,1)
+            );
+        }
+
+        // then
+        Mockito.verify(concertReader, Mockito.times(1))
+                .readByDateBetween(Mockito.any(), Mockito.any());
+    }
+
     @Test
     void getAvailableConcerts() {
-        // given
-        User user = userJpaRepository.save(
-                User.builder()
-                        .uuid("1234-5678")
-                        .build()
-        );
-        userJpaRepository.flush();
-
-        WaitingQueue token = WaitingQueue.builder()
-                .status(WaitingQueueStatus.ACTIVE)
-                .build();
-        token.setUser(user);
-        waitingQueueJpaRepository.save(token);
-        waitingQueueJpaRepository.flush();
-
-        UserContext.setContext(user);
-
         // when
-        List<Concert> concertList = concertApplication.getAvailableConcerts(
+        AvailableConcertDtoList concertList = concertApplication.getAvailableConcerts(
                 LocalDate.of(2025,7, 1),
                 LocalDate.of(2025,8,1)
         );
 
         // then
-        Assertions.assertThat(concertList.size()).isEqualTo(3);
+        Assertions.assertThat(concertList.getAvailableConcertDtoList().size()).isEqualTo(3);
     }
 }

@@ -66,7 +66,7 @@ public class ReservationApplication implements ReservationUsecase{
         // lock을 걸어 가져와야 하기 때문에 concert.getSeatList() (x)
         Seat seat = seatReader.readAvailableSeatByConcertIdAndNumberWithLock(concert.getId(), seatNumber);
 
-        seat.setStatus(SeatStatus.RESERVED);
+        seatModifier.setReserved(seat);
 
         LocalDateTime expiredTime = LocalDateTime.now().plusMinutes(RESERVATION_LIFETIME_IN_MINUTES);
         Reservation reservation = Reservation.builder()
@@ -78,7 +78,6 @@ public class ReservationApplication implements ReservationUsecase{
         reservation.setSeat(seat);
 
         reservationWriter.writeReservation(reservation);
-        seatModifier.modifySeat(seat);
 
         // 레디스 명령어를 제일 마지막에 수행함으로써 레디스 트랜잭션 사용 X
         // 토큰 값 덮어쓰기

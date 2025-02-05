@@ -35,29 +35,12 @@ class SeatApplicationIntegrationTest {
     @Transactional
     @Test
     void getAvailableSeatsByDate() {
-        // given
-        User user = userJpaRepository.save(
-                User.builder()
-                        .uuid(UUID.randomUUID().toString())
-                        .build()
-        );
-        userJpaRepository.flush();
-
-        WaitingQueue token = WaitingQueue.builder()
-                .status(WaitingQueueStatus.ACTIVE)
-                .build();
-        token.setUser(user);
-        waitingQueueJpaRepository.save(token);
-        waitingQueueJpaRepository.flush();
-
-        UserContext.setContext(user);
-
         // when
-        List<Seat> seatList = seatApplication.getAvailableSeatsByDate(
+        List<Long> seatNumberList = seatApplication.getAvailableSeatsByDate(
                 LocalDate.of(2025,7, 15)
         );
 
         // then
-        Assertions.assertThat(seatList.size()).isEqualTo(50);
+        Assertions.assertThat(seatNumberList.size()).isEqualTo(50);
     }
 }

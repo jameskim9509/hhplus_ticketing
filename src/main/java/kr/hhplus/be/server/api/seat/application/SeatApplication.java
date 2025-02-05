@@ -9,6 +9,7 @@ import kr.hhplus.be.server.domain.reservation.components.ReservationModifier;
 import kr.hhplus.be.server.domain.reservation.components.ReservationReader;
 import kr.hhplus.be.server.domain.reservation.type.ReservationStatus;
 import kr.hhplus.be.server.domain.seat.Seat;
+import kr.hhplus.be.server.domain.seat.components.SeatModifier;
 import kr.hhplus.be.server.domain.seat.components.SeatReader;
 import kr.hhplus.be.server.domain.seat.type.SeatStatus;
 import kr.hhplus.be.server.domain.token.components.WaitingQueueReader;
@@ -23,7 +24,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.LongStream;
 
 @Service
 @RequiredArgsConstructor
@@ -32,14 +36,18 @@ public class SeatApplication implements SeatUsecase{
     private final WaitingQueueReader waitingQueueReader;
     private final ConcertReader concertReader;
     private final SeatReader seatReader;
+    private final SeatModifier seatModifier;
     private final ReservationReader reservationReader;
     private final ReservationModifier reservationModifier;
 
     @Override
     @Transactional
-    public List<Seat> getAvailableSeatsByDate(LocalDate date)
+    public List<Long> getAvailableSeatsByDate(LocalDate date)
     {
-        return seatReader.getAvailableSeats(concertReader.getByDate(date));
+        List<Long> unavailableSeatNumbers = seatReader.getUnavailableSeatsByDate(date);
+        return LongStream.rangeClosed(1, 50).filter(
+                seatNumber -> !unavailableSeatNumbers.contains(seatNumber)
+        ).boxed().toList();
     }
 
     @Transactional
@@ -51,7 +59,7 @@ public class SeatApplication implements SeatUsecase{
                 .filter(r -> r.getExpiredAt().isBefore(LocalDateTime.now()))
                 .forEach(r ->
                 {
-                    r.getSeat().setStatus(SeatStatus.AVAILABLE);
+                    seatModifier.setAvailable(r.getSeat());
                     r.setStatus(ReservationStatus.EXPIRED);
                     reservationModifier.modifyReservation(r);
                 });

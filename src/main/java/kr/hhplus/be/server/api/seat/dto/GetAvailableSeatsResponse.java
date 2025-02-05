@@ -4,11 +4,11 @@ import kr.hhplus.be.server.domain.seat.Seat;
 
 import java.util.List;
 
-public record GetAvailableSeatsResponse(List<SeatResponse> availableSeats) {
-    public static GetAvailableSeatsResponse from(List<Seat> availableSeats)
+public record GetAvailableSeatsResponse(List<SeatResponse> availableSeatNumber) {
+    public static GetAvailableSeatsResponse from(List<Long> availableSeatNumber)
     {
         return new GetAvailableSeatsResponse(
-                availableSeats.stream().map(SeatResponse::of).toList()
+                availableSeatNumber.stream().map(SeatResponse::of).toList()
         );
     }
 }

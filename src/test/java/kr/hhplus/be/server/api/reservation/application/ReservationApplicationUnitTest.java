@@ -75,17 +75,15 @@ class ReservationApplicationUnitTest {
         // when
         reservationApplication.reserveSeat(LocalDate.now(), 10L);
         Mockito.verify(reservationWriter).writeReservation(reservationCaptor.capture());
-        Mockito.verify(seatModifier).modifySeat(seatCaptor.capture());
+        Mockito.verify(seatModifier, Mockito.times(1)).setReserved(Mockito.any());
         Mockito.verify(waitingQueueModifier).changeExpiredTime(tokenCaptor.capture(), Mockito.anyDouble());
 
         Reservation capturedReservation = reservationCaptor.getValue();
-        Seat capturedSeat = seatCaptor.getValue();
         String capturedToken = tokenCaptor.getValue();
         // then
         Assertions.assertThat(capturedReservation.getConcert()).isNotNull();
         Assertions.assertThat(capturedReservation.getUser()).isNotNull();
         Assertions.assertThat(capturedReservation.getSeat()).isNotNull();
-        Assertions.assertThat(capturedSeat.getStatus()).isEqualTo(SeatStatus.RESERVED);
         Assertions.assertThat(capturedToken).isNotNull();
     }
 

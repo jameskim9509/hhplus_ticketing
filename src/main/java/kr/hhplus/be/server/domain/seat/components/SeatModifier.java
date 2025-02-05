@@ -5,6 +5,8 @@ import kr.hhplus.be.server.domain.seat.repositories.SeatModifierRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+
 @RequiredArgsConstructor
 @Service
 public class SeatModifier {
@@ -13,5 +15,15 @@ public class SeatModifier {
     public Seat modifySeat(Seat seat)
     {
         return seatModifierRepository.modifySeat(seat);
+    }
+
+    public void setAvailable(Seat seat)
+    {
+        seatModifierRepository.setAvailable(seat);
+    }
+
+    public void setReserved(Seat seat)
+    {
+        seatModifierRepository.setReserved(seat);
     }
 }

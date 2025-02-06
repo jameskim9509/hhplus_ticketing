@@ -6,12 +6,16 @@ import kr.hhplus.be.server.domain.payment.Payment;
 import kr.hhplus.be.server.domain.reservation.Reservation;
 import kr.hhplus.be.server.domain.reservation.type.ReservationStatus;
 import kr.hhplus.be.server.domain.token.WaitingQueue;
+import kr.hhplus.be.server.domain.token.components.WaitingQueueWriter;
+import kr.hhplus.be.server.domain.token.repositories.WaitingQueueWriterRepository;
 import kr.hhplus.be.server.domain.token.type.WaitingQueueStatus;
 import kr.hhplus.be.server.domain.user.User;
 import kr.hhplus.be.server.infrastructure.core.reservation.ReservationJpaRepository;
 import kr.hhplus.be.server.infrastructure.core.user.UserJpaRepository;
 import kr.hhplus.be.server.infrastructure.core.waiting_queue.WaitingQueueJpaRepository;
+import kr.hhplus.be.server.infrastructure.redis.TokenRedisRepository;
 import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,6 +24,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 import org.testcontainers.shaded.org.apache.commons.lang3.time.StopWatch;
+import org.testcontainers.shaded.org.checkerframework.checker.units.qual.A;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -27,6 +32,9 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+
+import static kr.hhplus.be.server.infrastructure.redis.TokenRedisRepository.ACTIVE_TOKEN_SET_NAME;
+import static kr.hhplus.be.server.infrastructure.redis.TokenRedisRepository.WAIT_TOKEN_SET_NAME;
 
 
 @ActiveProfiles("test")
@@ -40,9 +48,24 @@ class PaymentApplicationIntegrationTest {
     WaitingQueueJpaRepository waitingQueueJpaRepository;
     @Autowired
     ReservationJpaRepository reservationJpaRepository;
+    @Autowired
+    WaitingQueueWriter waitingQueueWriter;
+    @Autowired
+    TokenRedisRepository tokenRedisRepository;
 
     @Autowired
     PaymentApplication paymentApplication;
+
+    @AfterEach
+    void clearRedisDB()
+    {
+        tokenRedisRepository.zSetRemoveRangeByScore(
+                ACTIVE_TOKEN_SET_NAME, Double.MIN_VALUE, Double.MAX_VALUE
+        );
+        tokenRedisRepository.zSetRemoveRangeByScore(
+                WAIT_TOKEN_SET_NAME, Double.MIN_VALUE, Double.MAX_VALUE
+        );
+    }
 
     @Transactional
     @Test
@@ -56,12 +79,7 @@ class PaymentApplicationIntegrationTest {
         );
         userJpaRepository.flush();
 
-        WaitingQueue token = WaitingQueue.builder()
-                .status(WaitingQueueStatus.ACTIVE)
-                .build();
-        token.setUser(user);
-        waitingQueueJpaRepository.save(token);
-        waitingQueueJpaRepository.flush();
+        waitingQueueWriter.writeActiveToken(user.getUuid(), 1234);
 
         Reservation reservation = reservationJpaRepository.save(
                 Reservation.builder()
@@ -98,12 +116,7 @@ class PaymentApplicationIntegrationTest {
         );
         userJpaRepository.flush();
 
-        WaitingQueue token = WaitingQueue.builder()
-                .status(WaitingQueueStatus.ACTIVE)
-                .build();
-        token.setUser(user);
-        waitingQueueJpaRepository.save(token);
-        waitingQueueJpaRepository.flush();
+        waitingQueueWriter.writeActiveToken(user.getUuid(), 1234);
 
         Reservation reservation =
                 reservationJpaRepository.save(
@@ -116,7 +129,7 @@ class PaymentApplicationIntegrationTest {
                 );
         reservationJpaRepository.flush();
 
-        // when
+        // when, then
         List<CompletableFuture<Boolean>> futures = new ArrayList<>();
         for(int i = 0; i < 30; i++) {
             futures.add(CompletableFuture.supplyAsync(

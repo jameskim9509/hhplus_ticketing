@@ -3,22 +3,19 @@ package kr.hhplus.be.server.api.token.application;
 import kr.hhplus.be.server.common.Interceptor.UserContext;
 import kr.hhplus.be.server.common.exception.ConcertException;
 import kr.hhplus.be.server.common.exception.ErrorCode;
-import kr.hhplus.be.server.domain.token.WaitingQueue;
 import kr.hhplus.be.server.domain.token.components.WaitingQueueModifier;
 import kr.hhplus.be.server.domain.token.components.WaitingQueueReader;
 import kr.hhplus.be.server.domain.token.components.WaitingQueueWriter;
-import kr.hhplus.be.server.domain.token.type.WaitingQueueStatus;
 import kr.hhplus.be.server.domain.user.User;
 import kr.hhplus.be.server.domain.user.components.UserModifier;
 import kr.hhplus.be.server.domain.user.components.UserReader;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.List;
+import java.time.ZoneOffset;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -31,46 +28,34 @@ public class TokenApplication implements TokenUsecase{
     private final WaitingQueueWriter waitingQueueWriter;
     private final WaitingQueueModifier waitingQueueModifier;
 
-    public static final Integer MAX_ACTIVE_USER = 10;
+    public static final Long MAX_ACTIVE_USER = 10L;
+    public static final Long ACTIVE_TOKEN_LIFETIME_IN_MINUTES = 10L;
 
     @Override
     @Transactional
-    public WaitingQueue createToken(Long userId)
+    public String createToken(Long userId)
     {
         User user = userReader.readByIdWithOptimisticLock(userId);
         String uuid = user.getUuid();
         if (Objects.isNull(uuid)) {
             uuid = UUID.randomUUID().toString();
-            userModifier.modifyUser(
-                    User.builder()
-                            .id(user.getId())
-                            .balance(user.getBalance())
-                            .uuid(uuid)
-                            .build()
-            );
+            user.setUuid(uuid);
+            userModifier.modifyUser(user);
         }
 
-        if (waitingQueueReader.isValidTokenExists(user))
+        if (waitingQueueReader.isWaitingTokenExists(uuid)
+                || waitingQueueReader.isActiveTokenExists(uuid))
         {
             throw new ConcertException(ErrorCode.TOKEN_ALREADY_EXISTS);
         }
 
-        List<WaitingQueue> tokenList = waitingQueueReader.readAllActiveTokensWithLock();
+        LocalDateTime now = LocalDateTime.now();
+        waitingQueueWriter.writeWaitingToken(
+                uuid,
+                now.toEpochSecond(ZoneOffset.UTC) * 1_000_000_000 + now.getNano()
+        );
 
-        WaitingQueue token = WaitingQueue.builder()
-                .build();
-        token.setUser(user);
-        if (tokenList.size() < MAX_ACTIVE_USER) {
-            token.setStatus(WaitingQueueStatus.ACTIVE);
-            token.setExpiredAt(LocalDateTime.now().plusMinutes(10));
-        }
-        else
-            token.setStatus(WaitingQueueStatus.WAIT);
-
-        waitingQueueWriter.writeToken(token);
-
-        // write Return 바로 가능??
-        return token;
+        return uuid;
     }
 
     @Override
@@ -78,21 +63,13 @@ public class TokenApplication implements TokenUsecase{
     public Long getToken()
     {
         User user = UserContext.getContext();
-        WaitingQueue token = waitingQueueReader.readValidToken(user);
-
-        if (token.getStatus() == WaitingQueueStatus.ACTIVE)
-            return 0L;
-
-        WaitingQueue activeToken = waitingQueueReader.readActiveTokenWithMaxId();
-
-        return token.getId() - activeToken.getId();
+        return waitingQueueReader.getWaitingNumber(user.getUuid()) + 1L;
     }
 
     @Transactional
     public void validateToken(User user)
     {
-        WaitingQueue token = waitingQueueReader.readValidToken(user);
-        if (token.getStatus() != WaitingQueueStatus.ACTIVE)
+        if (!waitingQueueReader.isActiveTokenExists(user.getUuid()))
             throw new ConcertException(ErrorCode.TOKEN_IS_INVALID);
     }
 
@@ -100,26 +77,26 @@ public class TokenApplication implements TokenUsecase{
     @Scheduled(cron = "")
     public void updateWaitingQueue()
     {
-        // delete Token 스케줄러를 updateToken 스케줄러와 합침으로써 스케줄러간 충돌 해결
-        waitingQueueModifier.deleteAllTokens(waitingQueueReader.readAllExpiredTokens());
+        // 큐토큰 갱신 -> 제거의 순서로써 제거를 지연하여 다른 비즈니스 로직과의 동시성 문제 방지
+        // 다음 갱신될 대기자가 스케줄링을 한번 더 기다려야하는 문제가 발생할 수 있음 (동시성 문제에 비해 감수할 만한 문제라고 판단)
+        Long activeTokensCount = waitingQueueReader.getActiveTokensCount();
 
-        List<WaitingQueue> tokenList = waitingQueueReader.readAllActiveTokensWithLock();
-        tokenList.stream()
-                .filter(t -> t.getExpiredAt().isBefore(LocalDateTime.now()))
-                .forEach(t -> t.setStatus(WaitingQueueStatus.EXPIRED));
-
-        List<WaitingQueue> activeTokenList = tokenList.stream()
-                .filter(t -> t.getStatus() == WaitingQueueStatus.ACTIVE)
-                .toList();
-        if (activeTokenList.size() < MAX_ACTIVE_USER)
+        if (activeTokensCount < MAX_ACTIVE_USER)
         {
-            waitingQueueReader.readWaitTokensLimitBy(PageRequest.of(0, MAX_ACTIVE_USER - activeTokenList.size())).stream()
-                    .forEach(t ->
-                    {
-                        t.setStatus(WaitingQueueStatus.ACTIVE);
-                        t.setExpiredAt(LocalDateTime.now().plusMinutes(10));
-                        waitingQueueModifier.modifyToken(t);
-                    });
+            LocalDateTime expiredAt = LocalDateTime.now().plusMinutes(ACTIVE_TOKEN_LIFETIME_IN_MINUTES);
+            waitingQueueModifier.deleteWaitTokens(MAX_ACTIVE_USER - activeTokensCount)
+                    .forEach(
+                            uuid -> waitingQueueWriter.writeActiveToken(
+                                    uuid,
+                                    expiredAt.toEpochSecond(ZoneOffset.UTC) * 1_000_000_000 + expiredAt.getNano()
+                            )
+                    );
         }
+
+        // delete Token 스케줄러를 updateToken 스케줄러와 합침으로써 스케줄러간 충돌 해결
+        LocalDateTime now = LocalDateTime.now();
+        waitingQueueModifier.deleteAllExpiredTokens(
+                now.toEpochSecond(ZoneOffset.UTC) * 1_000_000_000 + now.getNano()
+        );
     }
 }

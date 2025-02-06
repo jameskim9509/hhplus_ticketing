@@ -9,6 +9,7 @@ import kr.hhplus.be.server.domain.seat.type.SeatStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -24,6 +25,11 @@ public class SeatReader {
             throw new ConcertException(ErrorCode.AVAILABLE_SEAT_NOT_FOUND);
 
         return seatList;
+    }
+
+    public List<Long> getUnavailableSeatsByDate(LocalDate date)
+    {
+        return seatReaderRepository.getUnavailableSeatsByDate(date);
     }
 
     public Seat readAvailableSeatByConcertIdAndNumberWithLock(Long concertId, Long seatNumber)

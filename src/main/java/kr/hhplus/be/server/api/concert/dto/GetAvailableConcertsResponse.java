@@ -4,8 +4,8 @@ import kr.hhplus.be.server.domain.concert.Concert;
 
 import java.util.List;
 
-public record GetAvailableConcertsResponse(List<Concert> availableConcerts) {
-    public static GetAvailableConcertsResponse from(List<Concert> concertList)
+public record GetAvailableConcertsResponse(AvailableConcertDtoList availableConcerts) {
+    public static GetAvailableConcertsResponse from(AvailableConcertDtoList concertList)
     {
         return new GetAvailableConcertsResponse(concertList);
     }

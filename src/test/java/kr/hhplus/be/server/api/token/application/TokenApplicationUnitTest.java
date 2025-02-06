@@ -45,142 +45,48 @@ class TokenApplicationUnitTest {
         Mockito.doReturn(
                 User.builder().build()
         ).when(userReader).readByIdWithOptimisticLock(Mockito.anyLong());
-        Mockito.doReturn(
-                List.of(
-                        WaitingQueue.builder().build(),
-                        WaitingQueue.builder().build(),
-                        WaitingQueue.builder().build(),
-                        WaitingQueue.builder().build(),
-                        WaitingQueue.builder().build(),
-                        WaitingQueue.builder().build(),
-                        WaitingQueue.builder().build(),
-                        WaitingQueue.builder().build(),
-                        WaitingQueue.builder().build(),
-                        WaitingQueue.builder().build()
-                )
-        ).when(waitingQueueReader).readAllActiveTokensWithLock();
+        Mockito.doReturn(false)
+                .when(waitingQueueReader).isWaitingTokenExists(Mockito.any());
+        Mockito.doReturn(false)
+                .when(waitingQueueReader).isActiveTokenExists(Mockito.any());
 
         ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
-        ArgumentCaptor<WaitingQueue> tokenCaptor =ArgumentCaptor.forClass(WaitingQueue.class);
+        ArgumentCaptor<String> tokenCaptor = ArgumentCaptor.forClass(String.class);
 
         // when
         tokenApplication.createToken(1L);
 
         Mockito.verify(userModifier).modifyUser(userCaptor.capture());
-        Mockito.verify(waitingQueueWriter).writeToken(tokenCaptor.capture());
+        Mockito.verify(waitingQueueWriter).writeWaitingToken(tokenCaptor.capture(), Mockito.anyDouble());
         User capturedUser = userCaptor.getValue();
-        WaitingQueue capturedToken = tokenCaptor.getValue();
+        String capturedToken = tokenCaptor.getValue();
 
         // then
         Assertions.assertThat(capturedUser.getUuid()).isNotNull();
-        Assertions.assertThat(capturedToken.getStatus()).isEqualTo(WaitingQueueStatus.WAIT);
-    }
-
-    @Test
-    void getActiveToken() {
-        // given
-        UserContext.setContext(
-                User.builder().uuid(UUID.randomUUID().toString()).build()
-        );
-
-        Mockito.doReturn(WaitingQueue.builder().status(WaitingQueueStatus.ACTIVE).build()).when(waitingQueueReader).readValidToken(Mockito.any());
-
-        // when
-        Long waitingNumber = tokenApplication.getToken();
-
-        // then
-        Assertions.assertThat(waitingNumber).isEqualTo(0L);
-    }
-
-    @Test
-    void getWaitToken() {
-        // given
-        UserContext.setContext(
-                User.builder().uuid(UUID.randomUUID().toString()).build()
-        );
-
-        Mockito.doReturn(
-                WaitingQueue.builder()
-                        .id(20L)
-                        .status(WaitingQueueStatus.WAIT)
-                        .build()
-        ).when(waitingQueueReader).readValidToken(Mockito.any());
-
-        Mockito.doReturn(
-                WaitingQueue.builder()
-                        .id(10L)
-                        .status(WaitingQueueStatus.ACTIVE)
-                        .build()
-        ).when(waitingQueueReader).readActiveTokenWithMaxId();
-
-        // when
-        Long waitingNumber = tokenApplication.getToken();
-
-        // then
-        Assertions.assertThat(waitingNumber).isEqualTo(10L);
+        Assertions.assertThat(capturedToken).isEqualTo(capturedUser.getUuid());
     }
 
     @Test
     void updateWaitingQueue() {
         // given
-        Mockito.doReturn(
-                List.of(
-                        WaitingQueue.builder()
-                                .status(WaitingQueueStatus.ACTIVE)
-                                .expiredAt(LocalDateTime.now().minusMinutes(1))
-                                .build(),
-                        WaitingQueue.builder()
-                                .status(WaitingQueueStatus.ACTIVE)
-                                .expiredAt(LocalDateTime.now().minusMinutes(1))
-                                .build(),
-                        WaitingQueue.builder()
-                                .status(WaitingQueueStatus.ACTIVE)
-                                .expiredAt(LocalDateTime.now().plusMinutes(1))
-                                .build(),
-                        WaitingQueue.builder()
-                                .status(WaitingQueueStatus.ACTIVE)
-                                .expiredAt(LocalDateTime.now().plusMinutes(1))
-                                .build(),
-                        WaitingQueue.builder()
-                                .status(WaitingQueueStatus.ACTIVE)
-                                .expiredAt(LocalDateTime.now().plusMinutes(1))
-                                .build()
-                )
-        ).when(waitingQueueReader).readAllActiveTokensWithLock();
-        Mockito.doReturn(
-                List.of(
-                        WaitingQueue.builder()
-                                .status(WaitingQueueStatus.WAIT)
-                                .build(),
-                        WaitingQueue.builder()
-                                .status(WaitingQueueStatus.WAIT)
-                                .build(),
-                        WaitingQueue.builder()
-                                .status(WaitingQueueStatus.WAIT)
-                                .build()
-                )
-        ).when(waitingQueueReader).readWaitTokensLimitBy(Mockito.any());
-
-        ArgumentCaptor<PageRequest> pageCaptor = ArgumentCaptor.forClass(PageRequest.class);
+        Mockito.doReturn(8L)
+                        .when(waitingQueueReader).getActiveTokensCount();
+        ArgumentCaptor<Long> changeCountCaptor = ArgumentCaptor.forClass(Long.class);
 
         // when
         tokenApplication.updateWaitingQueue();
 
         // then
-        Mockito.verify(waitingQueueReader).readWaitTokensLimitBy(pageCaptor.capture());
-        Mockito.verify(waitingQueueModifier, Mockito.times(3)).modifyToken(Mockito.any());
-
-        PageRequest pageRequest = pageCaptor.getValue();
-        Assertions.assertThat(pageRequest.getPageSize()).isEqualTo(7);
+        Mockito.verify(waitingQueueModifier).deleteWaitTokens(changeCountCaptor.capture());
+        Assertions.assertThat(changeCountCaptor.getValue()).isEqualTo(2L);
     }
 
     @Test
-    void 활성화되지_않은_토큰으로_콘서트_조회시_에러()
+    void 활성화되지_않은_토큰_에러()
     {
         // given
-        Mockito.doReturn(
-                WaitingQueue.builder().status(WaitingQueueStatus.WAIT).build()
-        ).when(waitingQueueReader).readValidToken(Mockito.any());
+        Mockito.doReturn(false)
+                .when(waitingQueueReader).isActiveTokenExists(Mockito.any());
 
         // when, then
         Assertions.assertThatThrownBy(
@@ -192,19 +98,34 @@ class TokenApplicationUnitTest {
     }
 
     @Test
-    void 이미_토큰이_존재하는데_재발급_받을_경우_에러()
+    void 대기_토큰이_존재하는데_재발급_받을_경우_에러()
     {
         // given
         Mockito.doReturn(User.builder().build())
                 .when(userReader).readByIdWithOptimisticLock(Mockito.anyLong());
         Mockito.doReturn(true)
-                .when(waitingQueueReader)
-                .isValidTokenExists(Mockito.any());
+                .when(waitingQueueReader).isWaitingTokenExists(Mockito.any());
 
         // when
         Assertions.assertThatThrownBy(
                         () -> tokenApplication.createToken(1L)
-                ).isInstanceOf(RuntimeException.class)
-                .hasMessage("토큰이 이미 존재합니다.");
+                ).isInstanceOf(RuntimeException.class).hasMessage("토큰이 이미 존재합니다.");
+    }
+
+    @Test
+    void 활성_토큰이_존재하는데_재발급_받을_경우_에러()
+    {
+        // given
+        Mockito.doReturn(User.builder().build())
+                .when(userReader).readByIdWithOptimisticLock(Mockito.anyLong());
+        Mockito.doReturn(false)
+                .when(waitingQueueReader).isWaitingTokenExists(Mockito.any());
+        Mockito.doReturn(true)
+                .when(waitingQueueReader).isActiveTokenExists(Mockito.any());
+
+        // then, when
+        Assertions.assertThatThrownBy(
+                () -> tokenApplication.createToken(1L)
+        ).isInstanceOf(RuntimeException.class).hasMessage("토큰이 이미 존재합니다.");
     }
 }

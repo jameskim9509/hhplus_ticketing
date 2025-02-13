@@ -1,5 +1,6 @@
 package kr.hhplus.be.server.api.reservation.application;
 
+import kr.hhplus.be.server.api.reservation.dto.ReservationSuccessEvent;
 import kr.hhplus.be.server.api.token.application.TokenApplication;
 import kr.hhplus.be.server.common.Interceptor.UserContext;
 import kr.hhplus.be.server.common.exception.ConcertException;
@@ -41,6 +42,8 @@ public class ReservationApplication implements ReservationUsecase{
     private final ReservationWriter reservationWriter;
     private final SeatModifier seatModifier;
     private final WaitingQueueModifier waitingQueueModifier;
+
+    private final ReservationEventPublisher reservationEventPublisher;
 
     private static final Long RESERVATION_LIFETIME_IN_MINUTES = 5L;
 
@@ -86,6 +89,8 @@ public class ReservationApplication implements ReservationUsecase{
                 user.getUuid(),
                 expiredTime.toEpochSecond(ZoneOffset.UTC) * 1_000_000_000 + expiredTime.getNano()
         );
+
+        reservationEventPublisher.success(new ReservationSuccessEvent());
 
         return reservation;
     }

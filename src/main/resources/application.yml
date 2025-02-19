@@ -39,6 +39,11 @@ spring:
       host: localhost
       port: 6379
 
+  kafka:
+    bootstrap-servers: localhost:9092
+    replicas: 2
+    partitions: 3
+
 ---
 spring.config.activate.on-profile: test
 spring:

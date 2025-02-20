@@ -4,6 +4,7 @@ TRUNCATE TABLE waiting_queue;
 TRUNCATE TABLE reservation;
 TRUNCATE TABLE payment;
 TRUNCATE TABLE user;
+TRUNCATE TABLE outbox;
 
 
 INSERT INTO user(balance) VALUES(0);

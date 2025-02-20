@@ -6,6 +6,7 @@ import kr.hhplus.be.server.domain.reservation.components.ReservationModifier;
 import kr.hhplus.be.server.domain.reservation.components.ReservationReader;
 import kr.hhplus.be.server.domain.reservation.type.ReservationStatus;
 import kr.hhplus.be.server.domain.seat.Seat;
+import kr.hhplus.be.server.domain.seat.components.SeatModifier;
 import kr.hhplus.be.server.domain.token.WaitingQueue;
 import kr.hhplus.be.server.domain.token.components.WaitingQueueReader;
 import kr.hhplus.be.server.domain.token.type.WaitingQueueStatus;
@@ -34,6 +35,8 @@ class SeatApplicationUnitTest {
     private ReservationModifier reservationModifier;
     @Mock
     private UserReader userReader;
+    @Mock
+    private SeatModifier seatModifier;
 
     @InjectMocks
     private SeatApplication seatApplication;

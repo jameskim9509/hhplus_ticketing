@@ -23,6 +23,7 @@ import kr.hhplus.be.server.domain.token.type.WaitingQueueStatus;
 import kr.hhplus.be.server.domain.user.User;
 import kr.hhplus.be.server.domain.user.components.UserReader;
 import lombok.RequiredArgsConstructor;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -90,7 +91,15 @@ public class ReservationApplication implements ReservationUsecase{
                 expiredTime.toEpochSecond(ZoneOffset.UTC) * 1_000_000_000 + expiredTime.getNano()
         );
 
-        reservationEventPublisher.success(new ReservationSuccessEvent());
+        reservationEventPublisher.success(
+                new ReservationSuccessEvent(
+                        user.getId(),
+                        String.format(
+                                "%s-%s-%s",
+                                reservation.getId(), concert.getName(), seat.getNumber()
+                        )
+                )
+        );
 
         return reservation;
     }

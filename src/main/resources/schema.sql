@@ -33,6 +33,7 @@ CREATE TABLE IF NOT EXISTS reservation (
   `version` int not null default 0
 );
 
+
 CREATE TABLE IF NOT EXISTS payment (
   `payment_id` int AUTO_INCREMENT PRIMARY KEY,
   `reservation_id` int,
@@ -46,4 +47,13 @@ CREATE TABLE IF NOT EXISTS user (
   `balance` int,
   `uuid` varchar(255),
   `version` int not null default 0
+);
+
+CREATE TABLE IF NOT EXISTS outbox (
+    `outbox_id` int AUTO_INCREMENT PRIMARY KEY,
+    `reservation_id` int,
+    `key_name` int,
+    `payload` varchar(255),
+    `status` varchar(255),
+    `created_at` datetime
 );

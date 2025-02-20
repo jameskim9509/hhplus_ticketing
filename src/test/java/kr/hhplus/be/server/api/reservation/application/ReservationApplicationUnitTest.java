@@ -49,6 +49,8 @@ class ReservationApplicationUnitTest {
     private SeatModifier seatModifier;
     @Mock
     private WaitingQueueModifier waitingQueueModifier;
+    @Mock
+    private ReservationEventPublisher reservationEventPublisher;
 
     @InjectMocks
     private ReservationApplication reservationApplication;

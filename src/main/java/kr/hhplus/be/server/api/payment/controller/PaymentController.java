@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/concerts")
 @RequiredArgsConstructor
 public class PaymentController {
-    PaymentUsecase paymentUsecase;
+    private final PaymentUsecase paymentUsecase;
 
     @Operation(description = "예약된 좌석을 결제합니다.")
     @PatchMapping("/payment")

@@ -51,7 +51,7 @@ public class SeatApplication implements SeatUsecase{
     }
 
     @Transactional
-    @Scheduled(cron = "")
+    @Scheduled(cron = "0 */1 * * * *")
     public void updateSeat()
     {
         List<Reservation> reservationList = reservationReader.readAllPaymentRequiredWithLock();

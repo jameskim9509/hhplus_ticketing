@@ -9,7 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("concerts")
+@RequestMapping("/concerts")
 @RequiredArgsConstructor
 public class ReservationController {
     private final ReservationUsecase reservationUsecase;

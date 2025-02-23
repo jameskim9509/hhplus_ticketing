@@ -76,7 +76,7 @@ public class WaitingQueueReader {
             return 0L;
 
         return waitingQueueReaderRepository.getWaitingNumber(uuid)
-                .orElseThrow(() -> new ConcertException(ErrorCode.TOKEN_NOT_FOUND));
+                .orElseThrow(() -> new ConcertException(ErrorCode.TOKEN_NOT_FOUND)) + 1L;
     }
 
     public long getActiveTokensCount()

@@ -15,7 +15,7 @@ public class TokenController {
     private final TokenUsecase tokenUsecase;
 
     @Operation(description = "토큰을 조회합니다.")
-    @GetMapping("tickets/tokens/")
+    @GetMapping("/tickets/tokens")
     public GetTokenResponse getToken(
     )
     {

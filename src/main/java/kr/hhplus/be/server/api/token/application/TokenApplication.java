@@ -63,7 +63,7 @@ public class TokenApplication implements TokenUsecase{
     public Long getToken()
     {
         User user = UserContext.getContext();
-        return waitingQueueReader.getWaitingNumber(user.getUuid()) + 1L;
+        return waitingQueueReader.getWaitingNumber(user.getUuid());
     }
 
     @Transactional
@@ -74,7 +74,7 @@ public class TokenApplication implements TokenUsecase{
     }
 
     @Transactional
-    @Scheduled(cron = "")
+    @Scheduled(cron = "0/30 * * * * *")
     public void updateWaitingQueue()
     {
         // 큐토큰 갱신 -> 제거의 순서로써 제거를 지연하여 다른 비즈니스 로직과의 동시성 문제 방지

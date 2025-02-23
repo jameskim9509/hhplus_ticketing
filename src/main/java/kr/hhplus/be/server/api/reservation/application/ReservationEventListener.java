@@ -51,7 +51,7 @@ public class ReservationEventListener {
     }
 
     // 책임 분리 필요
-    @Scheduled(cron = "")
+    @Scheduled(cron = "0 */5 * * * *")
     public void republish()
     {
         outboxReader.readAllByStatus(OutboxStatus.INIT).forEach(o -> {

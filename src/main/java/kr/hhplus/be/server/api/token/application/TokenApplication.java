@@ -28,7 +28,7 @@ public class TokenApplication implements TokenUsecase{
     private final WaitingQueueWriter waitingQueueWriter;
     private final WaitingQueueModifier waitingQueueModifier;
 
-    public static final Long MAX_ACTIVE_USER = 10L;
+    public static final Long MAX_ACTIVE_USER = 30L;
     public static final Long ACTIVE_TOKEN_LIFETIME_IN_MINUTES = 10L;
 
     @Override
@@ -74,7 +74,8 @@ public class TokenApplication implements TokenUsecase{
     }
 
     @Transactional
-    @Scheduled(cron = "0/30 * * * * *")
+//    @Scheduled(cron = "0/30 * * * * *")
+    @Scheduled(cron = "*/5 * * * * *") // for LoadTest
     public void updateWaitingQueue()
     {
         // 큐토큰 갱신 -> 제거의 순서로써 제거를 지연하여 다른 비즈니스 로직과의 동시성 문제 방지

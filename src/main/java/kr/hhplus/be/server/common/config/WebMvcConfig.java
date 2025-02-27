@@ -17,10 +17,10 @@ public class WebMvcConfig implements WebMvcConfigurer {
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(tokenValidateInterceptor)
                 .excludePathPatterns("/concerts/balance/**")
-                .excludePathPatterns("/concerts/reservation");
+                .excludePathPatterns("/concerts/reservation/*");
 
         registry.addInterceptor(userValidateInterceptor)
                 .addPathPatterns("/concerts/balance/**")
-                .addPathPatterns("/concerts/reservation"); // 예약 조회
+                .addPathPatterns("/concerts/reservation/*"); // 예약 조회
     }
 }

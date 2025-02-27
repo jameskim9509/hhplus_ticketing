@@ -27,7 +27,7 @@ public class TokenValidateInterceptor implements HandlerInterceptor {
         // 토큰 생성 요청일 경우에는 토큰 검증 제외
         String path = new UrlPathHelper().getPathWithinApplication(request);
         HttpMethod method = HttpMethod.valueOf(request.getMethod());
-        if ("/tickets/tokens/*".matches(path) && HttpMethod.POST.equals(method))
+        if (path.matches("/concerts/tickets/tokens/.*") && HttpMethod.POST.equals(method))
             return true;
 
         String uuid = request.getHeader("X-Custom-Header");
@@ -37,10 +37,17 @@ public class TokenValidateInterceptor implements HandlerInterceptor {
         User user = userReader.readByUuid(uuid);
         UserContext.setContext(user);
 
+        if (path.matches("/concerts/tickets/tokens") && HttpMethod.GET.equals(method))
+            return HandlerInterceptor.super.preHandle(request, response, handler);
+
         tokenApplication.validateToken(user);
 
-        HandlerMethod handlerMethod = (HandlerMethod) handler;
-        log.info("{} : {}", request.getRemoteAddr(),handlerMethod.getMethod());
+        if (handler instanceof HandlerMethod) {
+            HandlerMethod handlerMethod = (HandlerMethod) handler;
+            log.info("{} : {}", request.getRemoteAddr(), handlerMethod.getMethod());
+        } else {
+            log.info("{} : Static resource or other handler ({})", request.getRemoteAddr(), handler.getClass().getSimpleName());
+        }
 
         return HandlerInterceptor.super.preHandle(request, response, handler);
     }
